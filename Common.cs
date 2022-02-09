@@ -9,6 +9,40 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
+    class ReuseFunctions
+    {
+        /// <summary>
+        /// 矩阵枚举上下左右四个方向
+        /// </summary>
+        IEnumerable<(int ni, int nj)> FourDir(int[][] mx, int i, int j)
+        {
+            if (i > 0) yield return (i - 1, j);
+            if (i < mx.Length - 1) yield return (i + 1, j);
+            if (j > 0) yield return (i, j - 1);
+            if (j < mx[i].Length - 1) yield return (i, j + 1);
+        }
+
+        /// <summary>
+        /// 矩阵枚举周围8个方向
+        /// </summary>
+        IEnumerable<(int ni, int nj)> EightDir(int[][] mx, int i, int j)
+        {
+            if (i > 0)
+            {
+                yield return (i - 1, j);
+                if (j > 0) yield return (i - 1, j - 1);
+                if (j < mx[i].Length - 1) yield return (i - 1, j + 1);
+            }
+            if (j > 0) yield return (i, j - 1);
+            if (j < mx[i].Length - 1) yield return (i, j + 1);
+            if (i < mx.Length - 1)
+            {
+                yield return (i + 1, j);
+                if (j > 0) yield return (i + 1, j - 1);
+                if (j < mx[i].Length - 1) yield return (i + 1, j + 1);
+            }
+        }
+    }
     public class ListNode
     {
         public int val;
@@ -690,6 +724,20 @@ namespace ConsoleCore1
             c.SetBlack();
         }
         #endregion // delete
+    }
+
+    // 前缀和
+    class PreSum
+    {
+        int[] sums;
+        public PreSum(int[] nums)
+        {
+            sums = new int[nums.Length];
+            sums[0] = nums[0];
+            for (int i = 1; i < nums.Length; ++i)
+                sums[i] = sums[i - 1] + nums[i];
+        }
+        public int RangeSum(int start, int end) => sums[end] - (start > 0 ? sums[start - 1] : 0);
     }
 
 

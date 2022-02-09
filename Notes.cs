@@ -41,6 +41,12 @@ namespace ConsoleCore1
             .Zip(t.OrderBy(c => c), (sc, tc) => (sc, tc))
             .Any(p => p.sc != p.tc);
 
+        public int P258_AddDigits(int num)
+            => num < 10 ? num : P258_AddDigits(num.ToString().Select(t => t - '0').Sum());
+
+        public char P389_FindTheDifference(string s, string t)
+            => (s + "~").OrderBy(a => a).Zip(t.OrderBy(b => b), (sc, tc) => (sc, tc)).Where(c => c.sc != c.tc).Select(c => c.tc).First();
+
         public int P1672_MaximumWealth(int[][] accounts) 
             => accounts.Select(c => c.Sum()).Max();
 
