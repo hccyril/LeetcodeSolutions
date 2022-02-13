@@ -15,11 +15,15 @@ namespace ConsoleCore1
      * 比较函数不要使用 return a - b，当a == int.MinValue时会溢出，同理取中间值不要用mid = (a + b) / 2 // P493
      * 负数右移并不等于除以2，例如-3 >> 1 == -2，但是-3 / 2 还是对的（-1）// P493
      * BinarySearch的返回值为>=0时不一定是最左边或者最右边的值，当数组存在相同值而且要取upper_bound或者lower_bound时要特别注意！// P493
-     * 二分搜索的标准写法（P222）：
+     * #P0222 二分搜索的标准写法：
         int mid = l + (r - l + 1 >> 1);
         if (Find(root, mid) == null) r = mid - 1;
         else l = mid;
-     *
+     * #P0269 火星词典(hard)
+     *   使用sort和IComparer进行排序时，前提是比较函数是严格consistent的（也就是对于a>b,b>c一定有a>c）
+     *   但实际情况未必如此，本题就是例子，使用sort排序出现WA，改成自己写的插入排序后就好了
+     * 
+     * to be continued....
      *
      * */
 

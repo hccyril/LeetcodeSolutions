@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
-    // medium, 没什么技巧就是模拟 // TODO 2021/8/14 Daily (七夕节每日一题）
+    // medium, 没什么技巧就是模拟 // 2021/8/14 Daily (七夕节每日一题）
     class P1583统计不开心的朋友
     {
-        public int UnhappyFriends(int n, int[][] preferences, int[][] pairs)
-        {
-            throw new NotImplementedException();
-        }
+        //public int UnhappyFriends(int n, int[][] preferences, int[][] pairs)
+        //{
+        //}
 
         // 未做，以下为官方题解
         // 但是算法很简单，就是直接模拟而已

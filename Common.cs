@@ -275,29 +275,11 @@ namespace ConsoleCore1
     class UnionFind
     {
         int[] parent;
-
-        public UnionFind(int n)
-        {
-            parent = new int[n];
-            for (int i = 0; i < n; i++)
-            {
-                parent[i] = i;
-            }
-        }
-
-        public void Union(int index1, int index2)
-        {
-            parent[Find(index2)] = Find(index1);
-        }
-
-        public int Find(int index)
-        {
-            if (parent[index] != index)
-            {
-                parent[index] = Find(parent[index]);
-            }
-            return parent[index];
-        }
+        public UnionFind(int n) => parent = Enumerable.Range(0, n).ToArray();
+        public bool Check(int index1, int index2) => Find(index1) == Find(index2);
+        public void Union(int index1, int index2) => parent[Find(index2)] = Find(index1);
+        public int Find(int index) => parent[index] != index ? (parent[index] = Find(parent[index])) : parent[index];
+        public int GroupCount() => Enumerable.Range(0, parent.Length).Select(i => Find(i)).Distinct().Count();
     }
 
     // 单词前缀树 - 212单词搜索，1032字符流
@@ -381,7 +363,10 @@ namespace ConsoleCore1
                         pleft = false;
                     }
                     else
-                        return false; // Duplicate node not inserted	
+                    {
+                        // Duplicate node not inserted	
+                        return false; 
+                    }
                 }
 
                 // Create the new node and attach it to the parent node
@@ -400,7 +385,8 @@ namespace ConsoleCore1
         /** Ensure that the tree is a red-black tree */
         private void EnsureRBTree(TNode<E> te, List<TNode<E>> path)
         {
-            int i = path.Count - 1; // Index to the current node in the path
+            // Index to the current node in the path
+            int i = path.Count - 1; 
 
             // u is the last node in the path. u contains element e
             TNode<E> u = te; // path[i];
@@ -408,7 +394,8 @@ namespace ConsoleCore1
             // v is the parent of of u, if exists
             TNode<E> v = path[i - 1];
 
-            u.SetRed(); // It is OK to set u red    
+            // It is OK to set u red    
+            u.SetRed(); 
 
             // Fix double red violation at u
             if (v.Red) FixDoubleRed(u, v, path, i);
@@ -461,8 +448,9 @@ namespace ConsoleCore1
                 }
             }
             else
-            { // Case 2: v's sibling x is red 
-              // Recolor nodes
+            { 
+                // Case 2: v's sibling x is red 
+                // Recolor nodes
                 w.SetRed();
                 u.SetRed();
                 w.left.SetBlack();
@@ -493,32 +481,65 @@ namespace ConsoleCore1
             else
                 parentOfw.right = b;
 
-            b.SetBlack(); // b becomes the root in the subtree
-            a.SetRed(); // a becomes the left child of b
-            c.SetRed(); // c becomes the right child of b
+            // b becomes the root in the subtree
+            b.SetBlack();
+            // a becomes the left child of b
+            a.SetRed();
+            // c becomes the right child of b
+            c.SetRed(); 
         }
 
         #region search node
-        public bool Search(E e)
+        public IEnumerable<E> Range(E start, E end)
         {
-            TNode<E> current = root; // Start from the root
-
+            // step 1: search start and build stack
+            Stack<TNode<E>> stk = new();
+            TNode<E> current = root;
             while (current != null)
             {
-                if (e.CompareTo(current.val) < 0)
+                if (start.CompareTo(current.val) <= 0)
                 {
+                    stk.Push(current);
                     current = current.left;
                 }
-                else if (e.CompareTo(current.val) > 0)
+                else if (start.CompareTo(current.val) > 0)
                 {
                     current = current.right;
                 }
-                else // element matches current.element
-                    return true; // Element is found
             }
 
-            return false;
+            // step 2 range search
+            while (stk?.Any() == true)
+            {
+                current = stk.Pop();
+                if (current.val.CompareTo(end) >= 0) break;
+                yield return current.val;
+                current = current.right;
+                while (current != null)
+                {
+                    stk.Push(current);
+                    current = current.left;
+                }
+            }
         }
+        //public bool Search(E e)
+        //{
+        //    TNode<E> current = root; // Start from the root
+        //    while (current != null)
+        //    {
+        //        if (e.CompareTo(current.val) < 0)
+        //        {
+        //            current = current.left;
+        //        }
+        //        else if (e.CompareTo(current.val) > 0)
+        //        {
+        //            current = current.right;
+        //        }
+        //        else // element matches current.element
+        //            return true; // Element is found
+        //    }
+        //    return false;
+        //}
         #endregion
 
         #region delete node

@@ -6,37 +6,32 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
-    // medium, c++用map（红黑树），这里用sortedlist // TODO
+    // medium, c++用map（红黑树），这里用自己实现的红黑树
     internal class P0220存在重复元素III
     {
+        class NumStruct : IComparable<NumStruct>
+        {
+            public long num;
+            public int idx;
+            public int CompareTo(NumStruct other) 
+                => num == other.num ? idx.CompareTo(other.idx) : num.CompareTo(other.num);
+        }
         public bool ContainsNearbyAlmostDuplicate(int[] nums, int k, int t)
         {
-            SortedList<long, int> srt = new();
-            throw new NotImplementedException();
-            //int i = 0;
-            //foreach (int n in nums) 
-            //{
-            //    long lb = (long)n - t, ub = (long)n + t;
-            //    srt.
-            //    for (auto begin = rbt.lower_bound(lb), end = rbt.upper_bound(ub); begin != end; ++begin)
-            //        if (i - begin->second <= k) return true;
-            //    rbt[n] = i++;
-            //}
-            //return false;
-
-            // C# 未完成，以下是c++的
-            /*
-            map<Long, int> rbt; // map内部是红黑树实现
+            TreeList<NumStruct> rbt = new();
             int i = 0;
-            Long lt = static_cast<Long>(t);
-            for (const int& n: nums) {
-            Long ln = static_cast<Long>(n), lb = ln - t, ub = ln + t;
-            for (auto begin = rbt.lower_bound(lb), end = rbt.upper_bound(ub); begin != end; ++begin)
-            if (i - begin->second <= k) return true;
-            rbt[n] = i++;
+            long lt = t;
+            foreach (int n in nums)
+            {
+                NumStruct ns = new NumStruct { num = n, idx = i },
+                    begin = new NumStruct { num = n - lt, idx = 0 },
+                    end = new NumStruct { num = n + lt, idx = int.MaxValue };
+                foreach (var it in rbt.Range(begin, end))
+                    if (i - it.idx <= k) return true;
+                rbt.Add(ns);
+                ++i;
             }
-            return false; 
-            */
+            return false;
         }
     }
 }

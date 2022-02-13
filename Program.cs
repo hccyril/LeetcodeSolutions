@@ -74,7 +74,7 @@ namespace ConsoleCore1
 
             // general run
             //MyTester.NC13134();
-            P1000合并石头的最低成本.Run();
+            P2157字符串分组.Run();
 
             // all - count time result
             time = System.Environment.TickCount - time;

@@ -23,7 +23,7 @@ namespace ConsoleCore1
             {
                 for (int i = 0, j = size - 1; j < stones.Length; ++i, ++j)
                 {
-                    Console.WriteLine("[{0}, {1}] -----", i, j);
+                    //Console.WriteLine("[{0}, {1}] -----", i, j);
 
                     int rsum = preSum.RangeSum(i, j);
                     if (size <= k) dp[i, j] = rsum;
@@ -34,7 +34,7 @@ namespace ConsoleCore1
                         int idx = 0, end = i, sum = 0;
                         while (idx >= 0)
                         {
-                            Console.WriteLine("idx={0} end={1} sum={2}", idx, end, sum);
+                            //Console.WriteLine("idx={0} end={1} sum={2}", idx, end, sum);
                             if (idx == k)
                             {
                                 if (end == j + 1)

@@ -16,9 +16,26 @@ You are given a graph that started as a tree with n nodes labeled from 1 to n, w
 
 Return an edge that can be removed so that the resulting graph is a tree of n nodes. If there are multiple answers, return the answer that occurs last in the input.
      * */
+    // medium, 最小生成树MST
+    // also 《剑指 Offer II 118. 多余的边》
+    // ver1: 2021/6/26
+    // ver2: 2022/2/10 并查集
     class P0684冗余连接
     {
+        // ver2: 并查集
         public int[] FindRedundantConnection(int[][] edges)
+        {
+            UnionFind uni = new(edges.Length);
+            foreach (var ed in edges)
+            {
+                int a = ed[0] - 1, b = ed[1] - 1;
+                if (uni.Check(a, b)) return ed;
+                uni.Union(a, b);
+            }
+            return edges.Last();
+        }
+
+        public int[] FindRedundantConnection_ver1(int[][] edges)
         {
             // 标记节点是否被连接
             bool[] nc = new bool[edges.Length + 1];

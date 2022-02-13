@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ConsoleCore1
 {
     // hard, P0042接雨水的延伸(单调栈？) // TODO 2021/11/03 Daily
-    class P0407接雨水II : P0042接雨水
+    class P0407接雨水II 
     {
         public int TrapRainWater(int[][] heightMap)
         {

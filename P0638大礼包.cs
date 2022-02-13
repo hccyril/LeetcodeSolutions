@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
+    // medium, 2021/10/24
     // 背包问题->最短路径
     class P0638大礼包
     {
         /// <summary>
         /// 动态规划解法
         /// </summary>
-        public int ShoppingOffersDP(IList<int> price, IList<IList<int>> special, IList<int> needs)
-        {
-            throw new NotImplementedException(); // 最短路径已AC，动态规划未实现
-        }
+        //public int ShoppingOffersDP(IList<int> price, IList<IList<int>> special, IList<int> needs)
+        //{
+        //    // 最短路径已AC，动态规划未实现
+        //}
 
         bool Complete(IList<int> buy, IList<int> needs)
         {
