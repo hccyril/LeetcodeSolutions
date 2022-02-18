@@ -34,7 +34,7 @@ namespace ConsoleCore1
         }
         #endregion 
 
-        #region ver1 - DP - TODO
+        #region ver1 - DP - 还没做出来
         const int MAX = 2147483647;
         int N;
         int[] Primes;

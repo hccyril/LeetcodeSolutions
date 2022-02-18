@@ -8,7 +8,7 @@ namespace ConsoleCore1
 {
     // hard, 2022/2/9
     // 动态规划+回溯
-    // TODO 改成记忆化回溯应该会简单点
+    // （未尝试）改成记忆化回溯应该会简单点
     internal class P1000合并石头的最低成本
     {
         public int MergeStones(int[] stones, int k)

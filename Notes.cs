@@ -22,7 +22,8 @@ namespace ConsoleCore1
      * #P0269 火星词典(hard)
      *   使用sort和IComparer进行排序时，前提是比较函数是严格consistent的（也就是对于a>b,b>c一定有a>c）
      *   但实际情况未必如此，本题就是例子，使用sort排序出现WA，改成自己写的插入排序后就好了
-     * 
+     * #P0321 拼接最大数(hard)
+     *   排序时有相同元素永远是最麻烦的，WA: [8,9] [3,9] 3, 如何先选数组2的9而不是数组1的9？
      * to be continued....
      *
      * */

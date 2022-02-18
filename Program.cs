@@ -74,7 +74,7 @@ namespace ConsoleCore1
 
             // general run
             //MyTester.NC13134();
-            P2157字符串分组.Run();
+            P0327区间和的个数.Run();
 
             // all - count time result
             time = System.Environment.TickCount - time;

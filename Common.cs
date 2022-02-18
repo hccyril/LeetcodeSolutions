@@ -42,6 +42,20 @@ namespace ConsoleCore1
                 if (j < mx[i].Length - 1) yield return (i + 1, j + 1);
             }
         }
+
+        // 单调栈
+        Stack<(int, int)> BuildStack(int[] nums)
+        {
+            Stack<(int, int)> stk = new();
+            int n = -1;
+            for (int i = 0; i < nums.Length; ++i)
+                if (nums[i] > n)
+                {
+                    n = nums[i];
+                    stk.Push((i, n));
+                }
+            return stk;
+        }
     }
     public class ListNode
     {

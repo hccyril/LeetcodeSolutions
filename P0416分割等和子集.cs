@@ -9,48 +9,47 @@ namespace ConsoleCore1
     // medium, 2021/12/12, 记忆化回溯=DP
     internal class P0416分割等和子集
     {
-        // BFS - seems troublesome...
-        public bool CanPartition(int[] nums)
-        {
-            // pre-check
-            int sum = nums.Sum(), i = 0;
-            if ((sum & 1) != 0) return false;
-            int half = sum >> 1;
-            for (i = 0; i < nums.Length; ++i)
-                if (nums[i] > half) return false;
-                else if (nums[i] == half) return true;
-            if (nums.Any(t => t > half)) return false;
+        //// BFS - seems troublesome...
+        //public bool CanPartition(int[] nums)
+        //{
+        //    // pre-check
+        //    int sum = nums.Sum(), i = 0;
+        //    if ((sum & 1) != 0) return false;
+        //    int half = sum >> 1;
+        //    for (i = 0; i < nums.Length; ++i)
+        //        if (nums[i] > half) return false;
+        //        else if (nums[i] == half) return true;
+        //    if (nums.Any(t => t > half)) return false;
 
-            // init
-            int[] iarr = new int[nums.Length], sums = new int[nums.Length];
-            int count = nums.Length;
-            for (i = 0; i < nums.Length; ++i) iarr[i] = i;
-            HashHeap hp = new(false);
-            for (i = 0; i < nums.Length; ++i)
-                hp.Push(i, nums[i]);
+        //    // init
+        //    int[] iarr = new int[nums.Length], sums = new int[nums.Length];
+        //    int count = nums.Length;
+        //    for (i = 0; i < nums.Length; ++i) iarr[i] = i;
+        //    HashHeap hp = new(false);
+        //    for (i = 0; i < nums.Length; ++i)
+        //        hp.Push(i, nums[i]);
 
-            // BFS
-            while (hp.Any())
-            {
-                (i, sum) = hp.Pop();
-                sums[i] = sum;
-                for (int j = count - 1; j >= 0; --j)
-                {
-                    if (iarr[j] == i)
-                    {
-                        iarr[j] = iarr[count - 1];
-                        count--;
-                    }
-                    else
-                    {
-                        int next = iarr[j];
-                        //TODO
-                    }
-                }
-            }
-
-            throw new NotImplementedException();
-        }
+        //    // BFS
+        //    while (hp.Any())
+        //    {
+        //        (i, sum) = hp.Pop();
+        //        sums[i] = sum;
+        //        for (int j = count - 1; j >= 0; --j)
+        //        {
+        //            if (iarr[j] == i)
+        //            {
+        //                iarr[j] = iarr[count - 1];
+        //                count--;
+        //            }
+        //            else
+        //            {
+        //                int next = iarr[j];
+        //                //... 未完成
+        //            }
+        //        }
+        //    }
+        //    //... 未完成
+        //}
 
         int[] nums;
         Dictionary<int, bool> dic;

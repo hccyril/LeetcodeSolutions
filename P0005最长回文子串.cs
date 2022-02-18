@@ -234,7 +234,7 @@ namespace ConsoleCore1
             return arr[s.Length - 1];
         }
 
-        // TODO: next: 1278
+        // next: 1278
 
         // next: 1745
         public bool CheckPartitioning(string s)
