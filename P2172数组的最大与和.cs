@@ -83,7 +83,7 @@ namespace ConsoleCore1
 
         IEnumerable<(int i, int s)> Pickup(int[] nums, int map, int[] slots)
         {
-            // ...
+            throw new NotImplementedException();
         }
 
         long ZipState(int map, int[] slots)

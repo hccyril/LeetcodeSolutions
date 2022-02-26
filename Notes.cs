@@ -24,6 +24,11 @@ namespace ConsoleCore1
      *   但实际情况未必如此，本题就是例子，使用sort排序出现WA，改成自己写的插入排序后就好了
      * #P0321 拼接最大数(hard)
      *   排序时有相同元素永远是最麻烦的，WA: [8,9] [3,9] 3, 如何先选数组2的9而不是数组1的9？
+     * #P0432 要求所有的操作都在O(1)时间内
+     *   问题1：数组，数组元素为直接计数，当dec(max)时，就找不到下一个max是谁了
+     *   问题2：数组元素改成hashset，用例：添加一个a,5个b,10个c，然后这时dec(a)，min=a删除以后就不知道下一个min是谁了
+     * #P2183 周赛题D 2022/2/20
+     *   分解质因数时循环条件是p*p<=k，但漏了可能要特殊处理最后一个因子，例如6=2*3 //低级错误啊！导致迟了10分钟才提交通过，比赛时没做出来！
      * to be continued....
      *
      * */
@@ -40,16 +45,20 @@ namespace ConsoleCore1
             .Select(gp => gp.Select(t => t.str).ToList() as IList<string>)
             .ToList();
 
+        // also 剑指 Offer 58 - I. 翻转单词顺序
+        public string ReverseWords(string s)
+            => string.Join(" ", s.Trim().Split(' ').Where(t => !string.IsNullOrWhiteSpace(t)).Reverse());
+
         public bool P0242_IsAnagram(string s, string t)
             => s.Length == t.Length &&
             !s.OrderBy(c => c)
             .Zip(t.OrderBy(c => c), (sc, tc) => (sc, tc))
             .Any(p => p.sc != p.tc);
 
-        public int P258_AddDigits(int num)
-            => num < 10 ? num : P258_AddDigits(num.ToString().Select(t => t - '0').Sum());
+        public int P0258_AddDigits(int num)
+            => num < 10 ? num : P0258_AddDigits(num.ToString().Select(t => t - '0').Sum());
 
-        public char P389_FindTheDifference(string s, string t)
+        public char P0389_FindTheDifference(string s, string t)
             => (s + "~").OrderBy(a => a).Zip(t.OrderBy(b => b), (sc, tc) => (sc, tc)).Where(c => c.sc != c.tc).Select(c => c.tc).First();
 
         public int P1672_MaximumWealth(int[][] accounts) 
@@ -63,5 +72,10 @@ namespace ConsoleCore1
 
         public int P1748_SumOfUnique(int[] nums)
             => nums.GroupBy(t => t).Select(gp => gp.Count() == 1 ? gp.Key : 0).Sum();
+
+        // 剑指 Offer 21. 调整数组顺序使奇数位于偶数前面
+        public int[] Offer0021_Exchange(int[] nums)
+            => nums.Where(n => (n & 1) == 1).Concat(nums.Where(n => (n & 1) == 0)).ToArray();
+
     }
 }

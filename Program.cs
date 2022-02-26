@@ -73,8 +73,8 @@ namespace ConsoleCore1
             var time = System.Environment.TickCount;
 
             // general run
-            //MyTester.NC13134();
-            P0327区间和的个数.Run();
+            //MyTester.DicTest();
+            P0499迷宫III.Run();
 
             // all - count time result
             time = System.Environment.TickCount - time;

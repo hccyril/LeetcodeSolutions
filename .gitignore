@@ -6,6 +6,7 @@
 
 # backup
 *.bak
+*.txt
 *.pdf
 
 # Prerequisites

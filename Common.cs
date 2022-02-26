@@ -9,23 +9,30 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
-    class ReuseFunctions
+    static class ReuseFunctions
     {
         /// <summary>
         /// 矩阵枚举上下左右四个方向
         /// </summary>
-        IEnumerable<(int ni, int nj)> FourDir(int[][] mx, int i, int j)
+        internal static IEnumerable<(int ni, int nj)> FourDir(this int[][] mx, int i, int j)
         {
             if (i > 0) yield return (i - 1, j);
             if (i < mx.Length - 1) yield return (i + 1, j);
             if (j > 0) yield return (i, j - 1);
             if (j < mx[i].Length - 1) yield return (i, j + 1);
         }
+        internal static IEnumerable<(int ni, int nj)> FourDir(int m, int n, int i, int j)
+        {
+            if (i > 0) yield return (i - 1, j);
+            if (i < m) yield return (i + 1, j);
+            if (j > 0) yield return (i, j - 1);
+            if (j < n) yield return (i, j + 1);
+        }
 
         /// <summary>
         /// 矩阵枚举周围8个方向
         /// </summary>
-        IEnumerable<(int ni, int nj)> EightDir(int[][] mx, int i, int j)
+        internal static IEnumerable<(int ni, int nj)> EightDir(this int[][] mx, int i, int j)
         {
             if (i > 0)
             {
@@ -44,7 +51,7 @@ namespace ConsoleCore1
         }
 
         // 单调栈
-        Stack<(int, int)> BuildStack(int[] nums)
+        internal static Stack<(int, int)> BuildStack(this int[] nums)
         {
             Stack<(int, int)> stk = new();
             int n = -1;
@@ -55,6 +62,21 @@ namespace ConsoleCore1
                     stk.Push((i, n));
                 }
             return stk;
+        }
+
+        /// <summary>
+        /// 最长递增子序列（贪心+二分解法）(from 300)
+        /// </summary>
+        internal static int LIS(this IEnumerable<int> nums)
+        {
+            List<int> inds = new();
+            foreach (int n in nums)
+            {
+                int i = ~inds.BinarySearch(n);
+                if (i == inds.Count) inds.Add(n);
+                else if (i >= 0) inds[i] = n;
+            }
+            return inds.Count;
         }
     }
     public class ListNode

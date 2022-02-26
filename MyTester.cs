@@ -8,6 +8,12 @@ namespace ConsoleCore1
 {
     class MyTester
     {
+        internal static void DicTest()
+        {
+            Dictionary<string, int> dic = new();
+            dic["hello"]++;
+            foreach (var item in dic) Console.WriteLine(item.Key);
+        }
         int MyCompare(int a, int b)
         {
             //var p = new ConsoleCore1.CompleteTreeNode
