@@ -13,6 +13,10 @@ namespace ConsoleCore1
             Dictionary<string, int> dic = new();
             dic["hello"]++;
             foreach (var item in dic) Console.WriteLine(item.Key);
+            SortedDictionary<int, string> sort = new();
+            SortedSet<string> ss = new();
+            //ss.GetViewBetween()
+            
         }
         int MyCompare(int a, int b)
         {
