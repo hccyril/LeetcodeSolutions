@@ -1063,5 +1063,11 @@ namespace ConsoleCore1
             if (ans < 0) ans += MOD;
             return ans;
         }
+        public static int Multi(this int x, int y)
+        {
+            long p = (long)x * y;
+            p %= MOD;
+            return (int)p;
+        }
     }
 }
