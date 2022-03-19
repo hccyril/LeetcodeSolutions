@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
-    // hard
+    // hard, 2022/1/29
+	// rank: 2259
     // 本题用了C# 8.0的switch用法
     internal class P0864获取所有钥匙的最短路径
     {
@@ -81,7 +82,7 @@ namespace ConsoleCore1
                         }
                     }
 
-                    Console.WriteLine("      => i={0} j={1} map={2} move={3}", ni, nj, nmp, move); // DEBUG
+                    // Console.WriteLine("      => i={0} j={1} map={2} move={3}", ni, nj, nmp, move); // DEBUG
 
                     hs.Add(HashKey(ni, nj, nmp));
                     qu.Enqueue(Encode(ni, nj, nmp, move));

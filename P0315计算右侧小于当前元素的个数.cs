@@ -14,13 +14,31 @@ namespace ConsoleCore1
      * 
      * 遗留问题：
      * [Solved]1. 用BinarySearchTree怎么解？
-     * 2. Segment Tree 和 Fenwick Tree 到底是什么？
+     * 2.1 Segment Tree到底是什么？
+     * [Solved]2.2 Fenwick Tree? 
      * [Solved]3. MergeSort如何解？
      * */
     // 相似题目：《剑指 Offer 51. 数组中的逆序对》https://leetcode-cn.com/problems/shu-zu-zhong-de-ni-xu-dui-lcof/comments/
     // 相似题目：493 Reverse Pairs (逆序的定义改成了a > b * 2)
     class P0315计算右侧小于当前元素的个数
     {
+        #region ----- ver6 - 树状数组（Fenwick Tree) --------
+        // C# 272ms, 100% 暂时所有方法中最快 (2022/3/8)
+        public IList<int> CountSmaller_6(int[] nums)
+        {
+            Fenwick fwt = new(20002);
+            List<int> list = new();
+            foreach (int n in nums.Reverse())
+            {
+                int i = n + 10001;
+                list.Add(fwt.Sum(i - 1));
+                fwt.Update(i, 1);
+            }
+            list.Reverse();
+            return list;
+        }
+        #endregion // ver6
+
         #region ----- ver5 - 自己写的红黑树版本 --------
         public class TNode
         {

@@ -78,6 +78,70 @@ namespace ConsoleCore1
             }
             return inds.Count;
         }
+
+        internal static int CountOne(this int n) => n == 0 ? 0 : 1 + CountOne(n & (n - 1));
+
+        internal static IEnumerable<(int, int, int)> EnumEdges(this int[][] edges, bool isReverse = false)
+            => isReverse ?
+            edges.OrderBy(t => t[1]).ThenBy(t => t[0]).ThenBy(t => t[2]).Select(ed => (ed[1], ed[0], ed[2])) :
+            edges.OrderBy(t => t[0]).ThenBy(t => t[1]).ThenBy(t => t[2]).Select(ed => (ed[0], ed[1], ed[2]));
+        
+        /// <summary>
+        /// edge=(src,dst,len),支持重复边（取最短边），最终生成字典表
+        /// </summary>
+        internal static Dictionary<int, List<(int, int)>> BuildGraph(this int[][] edges, bool isReverse = false)
+        {
+            Dictionary<int, List<(int, int)>> dg = new();
+            int s0 = -1, t0 = -1;
+            foreach ((int sr, int dt, int le) in edges.EnumEdges(isReverse))
+            {
+                if (sr == s0 && dt == t0) continue;
+                if (sr != s0) dg[sr] = new();
+                dg[sr].Add((dt, le));
+                s0 = sr; t0 = dt;
+            }
+            return dg;
+        }
+
+        internal static long Dijkstra(this int[][] edges, int src, int dest)
+        {
+            var dg = edges.BuildGraph();
+            SHeap<int, long> hp = new((a, b) => a < b);
+            hp.Add(src, 0L);
+            while (hp.Any())
+            {
+                (int s, long p) = hp.Pop();
+                if (s == dest) return p;
+                if (!dg.ContainsKey(s)) continue;
+                foreach ((int nt, int w) in dg[s])
+                    hp.Add(nt, p + w);
+            }
+            return -1;
+        }
+        internal static long[] DijkstraAll(this int[][] edges, int n, int src, bool isReverse = false)
+        {
+            long[] arr = new long[n];
+            Array.Fill(arr, -1L);
+            var dg = edges.BuildGraph(isReverse);
+            Queue<int> qu = new();
+            qu.Enqueue(src);
+            arr[src] = 0L;
+            while (qu.Any())
+            {
+                int s = qu.Dequeue();
+                if (!dg.ContainsKey(s)) continue;
+                foreach ((int nt, int w) in dg[s])
+                {
+                    long l = arr[s] + w;
+                    if (arr[nt] < 0L || l < arr[nt])
+                    {
+                        arr[nt] = l;
+                        qu.Enqueue(nt);
+                    }
+                }
+            }
+            return arr;
+        }
     }
     public class ListNode
     {
@@ -168,6 +232,112 @@ namespace ConsoleCore1
         public T[] ToArray() => _list.ToArray();
     }
 
+    /// <summary>
+    /// 超级堆
+    /// </summary>
+    public class SHeap<K, V>
+    {
+        Func<V, V, bool> comp;
+        public bool KeepKey { private get; set; } = false;
+        public SHeap(Func<V, V, bool> comp) => this.comp = comp;
+        bool Compare(int i, int j) => comp(GetAt(i), GetAt(j));
+
+        V GetAt(int index) => _dic[_list[index - 1]].val;
+ 
+        List<K> _list = new();
+        Dictionary<K, (V val, int ind)> _dic = new();
+        public bool Any() => _list.Any();
+        public int Count => _list.Count;
+        public bool ContainsKey(K key) => _dic.ContainsKey(key);
+
+        public (K, V) Head => (_list[0], _dic[_list[0]].val);
+        public K HeadKey => _list[0];
+        public V HeadValue => _dic[_list[0]].val;
+        void Swap(int i, int j)
+        {
+            (_list[j - 1], _list[i - 1]) = (_list[i - 1], _list[j - 1]);
+            _dic[_list[i - 1]] = (_dic[_list[i - 1]].val, i);
+            _dic[_list[j - 1]] = (_dic[_list[j - 1]].val, j);
+        }
+
+        public bool Add(K key, V val)
+        {
+            if (ContainsKey(key))
+            {
+                if (comp(val, _dic[key].val))
+                {
+                    (V _, int i) = _dic[key];
+                    _dic[key] = (val, i);
+                    SwapUp(i);
+                    return true;
+                }
+                else return false;
+            }
+            _list.Add(key);
+            _dic.Add(key, (val, Count));
+            SwapUp(Count);
+            return true;
+        }
+
+        public (K key, V val) Pop()
+        {
+            (K key, V val) = Head;
+            Remove(key);
+            return (key, val);
+        }
+
+        public void Remove(K key)
+        {
+            (V _, int i) = _dic[key];
+            RemoveAt(i);
+            if (!KeepKey) _dic.Remove(key);
+        }
+
+        void RemoveAt(int i)
+        {
+            if (i == Count)
+            {
+                _list.RemoveAt(i - 1);
+                return;
+            }
+
+            Swap(i, Count);
+            _list.RemoveAt(_list.Count - 1);
+
+            bool hasSwapUp = SwapUp(i);
+            if (!hasSwapUp) SwapDown(i);
+        }
+
+        bool SwapUp(int ind)
+        {
+            int i = ind, inext = i >> 1;
+            while (inext > 0 && Compare(i, inext))
+            {
+                Swap(i, inext);
+                i = inext; inext = i >> 1;
+            }
+            return i != ind;
+        }
+
+        void SwapDown(int i)
+        {
+            while (i < Count)
+            {
+                int inext = i << 1;
+                if (inext <= Count)
+                {
+                    if (inext < Count && Compare(inext + 1, inext)) inext++;
+                    if (Compare(inext, i))
+                    {
+                        Swap(i, inext);
+                        i = inext;
+                        continue;
+                    }
+                }
+                break;
+            }
+        }
+    }
 
     /// <summary>
     /// 堆：大顶堆或者小顶堆
@@ -797,6 +967,31 @@ namespace ConsoleCore1
         public int RangeSum(int start, int end) => sums[end] - (start > 0 ? sums[start - 1] : 0);
     }
 
+    /// <summary>
+    /// 树状数组Fenwick Tree
+    /// </summary>
+    class Fenwick
+    {
+        int[] arr;
+        public Fenwick(int n) => arr = new int[n + 1];
+        public void Update(int i, int inc)
+        {
+            for (++i; i < arr.Length; arr[i] += inc, i += i & -i);
+        }
+        public int Sum(int i)
+        {
+            int sum = 0;
+            for (++i; i > 0; sum += arr[i], i -= i & -i);
+            return sum;
+        }
+        public int Get(int i)
+        {
+            int sum = arr[++i];
+            for (int next = i - 1, end = i - (i & -i); next > end; sum -= arr[next], next -= next & -next) ;
+            return sum;
+        }
+    }
+
 
     static class Common
     {
@@ -861,6 +1056,12 @@ namespace ConsoleCore1
             int sum = x + y;
             if (sum >= MOD) sum -= MOD;
             return sum;
+        }
+        public static int Sub(this int x, int y)
+        {
+            int ans = x - y;
+            if (ans < 0) ans += MOD;
+            return ans;
         }
     }
 }

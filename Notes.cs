@@ -29,6 +29,10 @@ namespace ConsoleCore1
      *   问题2：数组元素改成hashset，用例：添加一个a,5个b,10个c，然后这时dec(a)，min=a删除以后就不知道下一个min是谁了
      * #P2183 周赛题D 2022/2/20
      *   分解质因数时循环条件是p*p<=k，但漏了可能要特殊处理最后一个因子，例如6=2*3 //低级错误啊！导致迟了10分钟才提交通过，比赛时没做出来！
+     * #P0459重复的子字符串, #P0471编码最短长度的字符串
+     *   判断s是否子串的重复（例如“ababab”这种）：{s+s然后去掉头尾}是否包含s，而且重复的起始位置就在IndexOf(s)+1
+     * #P0632 SortedSet的Comparer
+     *   实现Comparer并避免返回0就可以解决不能重复添加元素的问题，但与此同时Remove方法会出问题，因为定位不到相同的元素
      * to be continued....
      *
      * */
@@ -72,6 +76,9 @@ namespace ConsoleCore1
 
         public int P1748_SumOfUnique(int[] nums)
             => nums.GroupBy(t => t).Select(gp => gp.Count() == 1 ? gp.Key : 0).Sum();
+
+        public bool P1941_AreOccurrencesEqual(string s)
+            => s.GroupBy(c => c).Select(g => g.Count()).GroupBy(n => n).Count() == 1;
 
         // 剑指 Offer 21. 调整数组顺序使奇数位于偶数前面
         public int[] Offer0021_Exchange(int[] nums)

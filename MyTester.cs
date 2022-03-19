@@ -23,8 +23,14 @@ namespace ConsoleCore1
             //var p = new ConsoleCore1.CompleteTreeNode
             return b - a;
         }
-        void Test()
+        internal void Test()
         {
+            int[] arr1 = { 1, 2, 3 };
+            int[][] arr = { arr1 }; //Array.Empty<int[]>();
+            var it = arr.OrderBy(t => t.First()).GetEnumerator();
+            Console.WriteLine(it.Current);
+            it.MoveNext();
+            Console.WriteLine(it.Current);
             //SortedDictionary<int, int> sd = new();
             
             //List<int> list = new();
@@ -35,11 +41,11 @@ namespace ConsoleCore1
             //IComparer<int> ic;
             //Span<int> sp = stackalloc int[10000];
             //sp.BinarySearch(80, MyCompare);
-            TreeList<int> tl = new();
+            //TreeList<int> tl = new();
 
-            Stack<char> s = new Stack<char>();
-            s.Pop();
-            s.Count();
+            //Stack<char> s = new Stack<char>();
+            //s.Pop();
+            //s.Count();
 
             //from i in System.Linq.Enumerable.Range(1,n)
             //// test

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
-    // hard, 2022/2/11 并查集，位运算
+    // hard, rank: 2499 2022/2/11 并查集，位运算
     // 跟839基本一样的解法
     internal class P2157字符串分组
     {
