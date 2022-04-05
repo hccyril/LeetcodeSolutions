@@ -65,6 +65,12 @@ namespace ConsoleCore1
         public char P0389_FindTheDifference(string s, string t)
             => (s + "~").OrderBy(a => a).Zip(t.OrderBy(b => b), (sc, tc) => (sc, tc)).Where(c => c.sc != c.tc).Select(c => c.tc).First();
 
+        public int[] P1337_KWeakestRows(int[][] mat, int k)
+            => Enumerable.Range(0, mat.Length).OrderBy(r => mat[r].Sum()).Take(k).ToArray();
+            //return (from i in Enumerable.Range(0, mat.Length)
+            //        orderby mat[i].Sum()
+            //        select i).Take(k).ToArray();
+
         public int P1672_MaximumWealth(int[][] accounts) 
             => accounts.Select(c => c.Sum()).Max();
 

@@ -115,8 +115,9 @@ namespace ConsoleCore1
                 Console.Write(c + " ");
             Console.WriteLine();
 
-            // input 4 - big data
-            //stones = Common.ReadArray(1872); // size = 27838 // ver2 TLE
+            // input 4 - big data // ans: 368361
+            stones = Common.ReadArray(1872); // size = 27838 // ver2 TLE
+            Console.WriteLine("大数据输出：" + new P1872石子游戏VIII().StoneGameVIII(stones));
             //Console.WriteLine(new P1872石子游戏VIII().StoneGameVIII_ver2(stones));
 
             //for (int i = stones.Length - 2; i >= 0; --i)

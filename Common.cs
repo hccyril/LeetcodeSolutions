@@ -81,7 +81,7 @@ namespace ConsoleCore1
 
         internal static int CountOne(this int n) => n == 0 ? 0 : 1 + CountOne(n & (n - 1));
 
-        internal static IEnumerable<(int, int, int)> EnumEdges(this int[][] edges, bool isReverse = false)
+        internal static IEnumerable<(int, int, int)> EnumLengthEdges(this int[][] edges, bool isReverse = false)
             => isReverse ?
             edges.OrderBy(t => t[1]).ThenBy(t => t[0]).ThenBy(t => t[2]).Select(ed => (ed[1], ed[0], ed[2])) :
             edges.OrderBy(t => t[0]).ThenBy(t => t[1]).ThenBy(t => t[2]).Select(ed => (ed[0], ed[1], ed[2]));
@@ -89,11 +89,11 @@ namespace ConsoleCore1
         /// <summary>
         /// edge=(src,dst,len),支持重复边（取最短边），最终生成字典表
         /// </summary>
-        internal static Dictionary<int, List<(int, int)>> BuildGraph(this int[][] edges, bool isReverse = false)
+        internal static Dictionary<int, List<(int, int)>> DirectedGraphWithLength(this int[][] edges, bool isReverse = false)
         {
             Dictionary<int, List<(int, int)>> dg = new();
             int s0 = -1, t0 = -1;
-            foreach ((int sr, int dt, int le) in edges.EnumEdges(isReverse))
+            foreach ((int sr, int dt, int le) in edges.EnumLengthEdges(isReverse))
             {
                 if (sr == s0 && dt == t0) continue;
                 if (sr != s0) dg[sr] = new();
@@ -103,9 +103,23 @@ namespace ConsoleCore1
             return dg;
         }
 
+        internal static Dictionary<int, List<int>> UndirectedGraphNoLength(this int[][] edges)
+        {
+            Dictionary<int, List<int>> ug = new();
+            foreach (var ed in edges)
+            {
+                int a = ed[0], b = ed[1];
+                if (!ug.ContainsKey(a)) ug[a] = new();
+                ug[a].Add(b);
+                if (!ug.ContainsKey(b)) ug[b] = new();
+                ug[b].Add(a);
+            }
+            return ug;
+        }
+
         internal static long Dijkstra(this int[][] edges, int src, int dest)
         {
-            var dg = edges.BuildGraph();
+            var dg = edges.DirectedGraphWithLength();
             SHeap<int, long> hp = new((a, b) => a < b);
             hp.Add(src, 0L);
             while (hp.Any())
@@ -122,7 +136,7 @@ namespace ConsoleCore1
         {
             long[] arr = new long[n];
             Array.Fill(arr, -1L);
-            var dg = edges.BuildGraph(isReverse);
+            var dg = edges.DirectedGraphWithLength(isReverse);
             Queue<int> qu = new();
             qu.Enqueue(src);
             arr[src] = 0L;
@@ -138,6 +152,29 @@ namespace ConsoleCore1
                         arr[nt] = l;
                         qu.Enqueue(nt);
                     }
+                }
+            }
+            return arr;
+        }
+
+        /// <summary>
+        /// 适用于无向图且边长为1，求源点到所有点之间的最短路径
+        /// </summary>
+        internal static int[] BfsPaths(this int[][] edges, int n, int src = 0)
+        {
+            int[] arr = new int[n];
+            Array.Fill(arr, -1);
+            var ug = edges.UndirectedGraphNoLength();
+            Queue<int> qu = new();
+            qu.Enqueue(src);
+            arr[src] = 0;
+            while (qu.Any())
+            {
+                int s = qu.Dequeue();
+                foreach (int next in ug[s].Where(t => arr[t] < 0))
+                {
+                    arr[next] = arr[s] + 1;
+                    qu.Enqueue(next);
                 }
             }
             return arr;

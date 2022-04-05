@@ -14,9 +14,28 @@ namespace ConsoleCore1
 
        说明：你不能倾斜容器。
      * */
+    // medium, 2021/06/03
+    // REDO 2022/4/5 US Daily
+    // 时隔将近一年后回来，已经看不懂以前的代码了，只知道那时写的巨复杂，现在竟然如此简单 
     class P0011盛最多水的容器
     {
+        // 双指针（类似单调栈思路） 2022/4/5
         public int MaxArea(int[] height)
+        {
+            int area = -1;
+            for (int i = 0, j = height.Length - 1; i < j;)
+            {
+                int low = Math.Min(height[i], height[j]);
+                area = Math.Max(area, low * (j - i));
+                if (height[i] < height[j])
+                    while (i < j && height[i] <= low) ++i;
+                else
+                    while (j > i && height[j] <= low) --j;
+            }
+            return area;
+        }
+
+        public int MaxArea_ver3(int[] height)
         {
             int max = 0;
 
@@ -85,6 +104,30 @@ namespace ConsoleCore1
             //}
 
             return max;
+        }
+
+        static void Test(int[] input)
+        {
+            var sln = new P0011盛最多水的容器();
+            int ans = sln.MaxArea(input);
+            Console.WriteLine(nameof(P0011盛最多水的容器) + ": " + ans);
+        }
+
+        internal static void Run()
+        {
+            int[] input1 = { 1, 2, 1 },
+                  input2 = { 8, 20, 1, 2, 3, 4, 5, 6 },
+                  input3 = new int[20000],
+                  input4 = Common.ReadArray(11); // count=40565
+            int i = 0;
+            for (int n = 0; n <= 10000; ++n) input3[i++] = n;
+            for (int n = 9999; n >= 1; --n) input3[i++] = n;
+
+            // total time: 703ms
+            Test(input1); // 2
+            Test(input2); // 42
+            Test(input3); // 50000000
+            Test(input4); // 402471897
         }
     }
 }

@@ -10,6 +10,7 @@ namespace ConsoleCore1
     {
         internal static void DicTest()
         {
+            HashSet<int> ps = new() { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31 };
             Dictionary<string, int> dic = new();
             dic["hello"]++;
             foreach (var item in dic) Console.WriteLine(item.Key);

@@ -10,9 +10,26 @@ namespace ConsoleCore1
      * 1004. Max Consecutive Ones III
      * Given a binary array nums and an integer k, return the maximum number of consecutive 1's in the array if you can flip at most k 0's
      * */
+    // DP // 2021/6/29
+    // 重做，当年第一次做时还不懂滑动窗口 // 2022/3/29
     class P1004最大连续1的个数III
     {
         public int LongestOnes(int[] nums, int k)
+        {
+            int cnt = 0;
+            for (int start = 0, end = 0; start < nums.Length; ++start)
+            {
+                if (nums[start] == 0)
+                {
+                    --k;
+                    while (k < 0) if (nums[end++] == 0) ++k;
+                }
+                cnt = Math.Max(cnt, start - end + 1);
+            }
+            return cnt;
+        }
+        // ver1: DP, 2021/6/29
+        public int LongestOnes_DP(int[] nums, int k)
         {
             int[] dp = new int[k + 1]; // dp[i]表示当前位置翻转i个0得到的最大连续1长度（不一定是全局最优）
             int[] dpNext = new int[k + 1];

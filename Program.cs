@@ -74,7 +74,7 @@ namespace ConsoleCore1
 
             // general run
             //new MyTester().Test();
-            P0316去除重复字母.Run();
+            P0011盛最多水的容器.Run();
 
             // all - count time result
             time = System.Environment.TickCount - time;

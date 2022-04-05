@@ -9,7 +9,6 @@ namespace ConsoleCore1
 {
     // hard, 周赛 WC284-D // 2022.3.14
     // dijkstra 扩展
-    // 比赛结束后第二天才做出来
     internal class P2203得到要求路径的最小带权子图
     {
         // ver3 三次dijkstra - AC
@@ -30,7 +29,7 @@ namespace ConsoleCore1
         //Total Time: 164719ms
         public long MinimumWeight_TLE(int n, int[][] edges, int src1, int src2, int dest)
         {
-            var dg = edges.BuildGraph(); 
+            var dg = edges.DirectedGraphWithLength(); 
             for (int k = -1; k < n; ++k)
                 if (!dg.ContainsKey(k))
                     dg[k] = new();
