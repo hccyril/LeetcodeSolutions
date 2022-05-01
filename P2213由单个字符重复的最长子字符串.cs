@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
-    // hard, WC285-D // 2022/3/20
+    // hard, WC285-D // 2022/3/20，比赛时未参加，赛后用时1小时左右完成
+    // rank: 2629 // 目前自己做出来的题目中最高rank
     // SortedSet（官方提示用线段树）
     internal class P2213由单个字符重复的最长子字符串
     {

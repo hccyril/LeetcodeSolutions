@@ -50,6 +50,24 @@ namespace ConsoleCore1
             }
         }
 
+        /// <summary>
+        /// 枚举最外围的所有点
+        /// </summary>
+        internal static IEnumerable<(int, int)> Outers(this int[][] mx)
+        {
+            for (int i = 0; i < mx.Length; ++i)
+            {
+                if (i == 0 || i == mx.Length - 1)
+                    for (int j = 0; j < mx[i].Length; ++j)
+                        yield return (i, j);
+                else
+                {
+                    yield return (i, 0);
+                    if (mx[i].Length > 1) yield return (i, mx[i].Length - 1);
+                }
+            }
+        }
+
         // 单调栈
         internal static Stack<(int, int)> BuildStack(this int[] nums)
         {
@@ -180,6 +198,19 @@ namespace ConsoleCore1
             return arr;
         }
     }
+
+    // Comparer
+    /// <summary>
+    /// 根据权值比较，然后是ij坐标
+    /// </summary>
+    class MatrixComparer : IComparer<(int i, int j, int l)>
+    {
+        public int Compare((int i, int j, int l) a, (int i, int j, int l) b)
+            => a.l != b.l ? a.l.CompareTo(b.l) :
+               a.i != b.i ? a.i.CompareTo(b.i) :
+               a.j.CompareTo(b.j);
+    }
+
     public class ListNode
     {
         public int val;
@@ -280,6 +311,12 @@ namespace ConsoleCore1
         bool Compare(int i, int j) => comp(GetAt(i), GetAt(j));
 
         V GetAt(int index) => _dic[_list[index - 1]].val;
+
+        public V this[K key]
+        {
+            get => _dic[key].val;
+            set => Add(key, value);
+        }
  
         List<K> _list = new();
         Dictionary<K, (V val, int ind)> _dic = new();
@@ -988,6 +1025,210 @@ namespace ConsoleCore1
             c.SetBlack();
         }
         #endregion // delete
+    }
+    
+    // 红黑树（支持下标操作）
+    public class TreeSet<E>
+    {
+        class TSN<T>
+        {
+            public TSN<T> Parent { get; private set; }
+
+            private void UpdateCount()
+            {
+                int orgCount = Count;
+                Count = (_left?.Count ?? 0) + (_right?.Count ?? 0) + 1;
+                if (Count != orgCount && Parent != null) Parent.UpdateCount();
+            }
+
+            public TSN<T> Left
+            {
+                get => _left;
+                set
+                {
+                    //if (_left != null) _left.Parent = null;
+                    _left = value;
+                    if (_left != null) _left.Parent = this;
+                    UpdateCount();
+                }
+            }
+            TSN<T> _left;
+
+            public TSN<T> Right
+            {
+                get => _right;
+                set
+                {
+                    //if (_right != null) _right.Parent = null;
+                    _right = value;
+                    if (_right != null) _right.Parent = this;
+                    UpdateCount();
+                }
+            }
+            TSN<T> _right;
+
+            public int Count { get; private set; } = 1;
+            public int LeftCount => (_left?.Count ?? 0) + 1;
+            public T Val { get; private set; }
+            public TSN(T e) => Val = e;
+            bool red = false;
+            public bool Red { get => red; set => red = value; }
+            public bool Black { get => !red; set => red = !value; }
+
+            public TSN<T> SetAsRoot()
+            {
+                Parent = null;
+                return this;
+            }
+        }
+
+        Func<E, E, int> comp;
+        int Compare(E a, E b)
+            => comp != null ? comp(a, b) : (a as IComparable<E>).CompareTo(b);
+        public TreeSet(Func<E, E, int> cmp = null) => comp = cmp;
+
+        TSN<E> root;
+        public int Count => root?.Count ?? 0;
+        public int Add(E e)
+        {
+            if (root == null) return (root = new(e)).Count - 1;
+            else
+            {
+                int ind = 0;
+                TSN<E> parent = null;
+                TSN<E> current = root;
+                bool pleft = false;
+                while (current != null)
+                {
+                    int r = Compare(e, current.Val);
+                    if (r < 0)
+                    {
+                        parent = current;
+                        current = current.Left;
+                        pleft = true;
+                    }
+                    else if (r > 0)
+                    {
+                        ind += current.LeftCount;
+                        parent = current;
+                        current = current.Right;
+                        pleft = false;
+                    }
+                    else return ~ind;
+                }
+
+                if (pleft)
+                    current = parent.Left = new(e);
+                else
+                    current = parent.Right = new(e);
+
+                EST(current);
+                return ind;
+            }
+        }
+
+        public E this[int i]
+        {
+            get
+            {
+                if (i < 0 || i >= Count) throw new IndexOutOfRangeException();
+                var current = root;
+                int ind = current.LeftCount - 1;
+                while (ind != i)
+                {
+                    if (i < ind)
+                    {
+                        ind = ind - current.LeftCount + current.Left.LeftCount;
+                        current = current.Left;
+                    }
+                    else
+                    {
+                        ind += current.Right.LeftCount;
+                        current = current.Right;
+                    }
+                }
+                return current.Val;
+            }
+        }
+        void EST(TSN<E> te)
+        {
+            TSN<E> u = te;
+            TSN<E> v = te.Parent;
+            u.Red = true;
+            if (v.Red) FDR(u, v);
+        }
+
+        private void FDR(TSN<E> u, TSN<E> v)
+        {
+            TSN<E> w = v.Parent;
+            TSN<E> parentOfw = w?.Parent;
+            TSN<E> x = w.Left == v ? w.Right : w.Left;
+
+            if (x == null || x.Black)
+            {
+                if (w.Left == v && v.Left == u)
+                {
+                    RR(u, v, w, w, parentOfw);
+
+                    w.Left = v.Right;
+                    v.Right = w;
+                }
+                else if (w.Left == v && v.Right == u)
+                {
+                    RR(v, u, w, w, parentOfw);
+                    v.Right = u.Left;
+                    w.Left = u.Right;
+                    u.Left = v;
+                    u.Right = w;
+                }
+                else if (w.Right == v && v.Right == u)
+                {
+                    RR(w, v, u, w, parentOfw);
+                    w.Right = v.Left;
+                    v.Left = w;
+                }
+                else
+                {
+                    RR(w, u, v, w, parentOfw);
+                    w.Right = u.Left;
+                    v.Left = u.Right;
+                    u.Left = w;
+                    u.Right = v;
+                }
+            }
+            else
+            {
+                w.Red = true;
+                u.Red = true;
+                w.Left.Black = true;
+                w.Right.Black = true;
+
+                if (w == root)
+                {
+                    w.Black = true;
+                }
+                else if (parentOfw.Red)
+                {
+                    u = w;
+                    v = parentOfw;
+                    FDR(u, v);
+                }
+            }
+        }
+
+        private void RR(TSN<E> a, TSN<E> b, TSN<E> c, TSN<E> w, TSN<E> parentOfw)
+        {
+            if (parentOfw == null)
+                root = b.SetAsRoot();
+            else if (parentOfw.Left == w)
+                parentOfw.Left = b;
+            else
+                parentOfw.Right = b;
+
+            b.Black = true;
+            a.Red = true;
+            c.Red = true;
+        }
     }
 
     // 前缀和

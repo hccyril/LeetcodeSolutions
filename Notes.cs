@@ -33,6 +33,8 @@ namespace ConsoleCore1
      *   判断s是否子串的重复（例如“ababab”这种）：{s+s然后去掉头尾}是否包含s，而且重复的起始位置就在IndexOf(s)+1
      * #P0632 SortedSet的Comparer
      *   实现Comparer并避免返回0就可以解决不能重复添加元素的问题，但与此同时Remove方法会出问题，因为定位不到相同的元素
+     * #P0871. Minimum Number of Refueling Stops
+     *   ver1/ver2 会发生一个重复加油的错误
      * to be continued....
      *
      * */
@@ -61,15 +63,35 @@ namespace ConsoleCore1
 
         public int P0258_AddDigits(int num)
             => num < 10 ? num : P0258_AddDigits(num.ToString().Select(t => t - '0').Sum());
-
+        // 347. Top K Frequent Elements (Medium)
+        public int[] P0347_TopKFrequent(int[] nums, int k)
+            => nums.GroupBy(n => n).OrderByDescending(g => g.Count()).Take(k).Select(g => g.Key).ToArray();
         public char P0389_FindTheDifference(string s, string t)
             => (s + "~").OrderBy(a => a).Zip(t.OrderBy(b => b), (sc, tc) => (sc, tc)).Where(c => c.sc != c.tc).Select(c => c.tc).First();
 
+		public bool P0796_RotateString(string s, string goal) 
+			=> s.Length == goal.Length && (s + s).Contains(goal);
+
+        public string P0819_MostCommonWord(string paragraph, string[] banned)
+            => paragraph.Split(' ', '!', '?', '\'', ',', ';', '.')
+            .Select(t => t.ToLower())
+            .Where(t => t != "" && !banned.Any(b => b == t))
+            .GroupBy(t => t)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .First();
+
+        public int[] P0905_SortArrayByParity(int[] nums)
+            => nums.Where(n => (n & 1) == 0).Concat(nums.Where(n => (n & 1) == 1)).ToArray();
+
         public int[] P1337_KWeakestRows(int[][] mat, int k)
             => Enumerable.Range(0, mat.Length).OrderBy(r => mat[r].Sum()).Take(k).ToArray();
-            //return (from i in Enumerable.Range(0, mat.Length)
-            //        orderby mat[i].Sum()
-            //        select i).Take(k).ToArray();
+        //return (from i in Enumerable.Range(0, mat.Length)
+        //        orderby mat[i].Sum()
+        //        select i).Take(k).ToArray();
+
+        public int P1665_MinimumEffort(int[][] tasks)
+            => tasks.OrderBy(t => t[1] - t[0]).Aggregate(0, (e, t) => Math.Max(e + t[0], t[1]));
 
         public int P1672_MaximumWealth(int[][] accounts) 
             => accounts.Select(c => c.Sum()).Max();
