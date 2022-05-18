@@ -9,8 +9,89 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
+    static class MathEX
+    {
+        internal static int Gcd(int a, int b) => b != 0 ? Gcd(b, a % b) : a;
+
+        // factor[n] 表示 n的最大因子，所以 n 是质数 iff factor[n] == n
+        static int[] factor;
+
+        internal static int[] FactorTable(int n)
+        {
+            factor = new int[n + 1];
+            int i, j;
+            for (i = 1; i <= n; factor[i] = i, i += 2) ;
+            for (i = 2; i <= n; factor[i] = 2, i += 2) ;
+            for (i = 2; i <= n >> 1; i++)
+            {
+                for (; factor[i] != i; i++) ;
+                for (j = i + i; j <= n; factor[j] = i, j += i) ;
+            }
+            return factor;
+        }
+
+        internal static bool IsPrime(int n)
+        {
+            if (factor == null || factor.Length <= n) FactorTable(n);
+            return factor[n] == n;
+        }
+
+        static int[] phi;
+
+        // 在数论，对正整数n，欧拉函数是小于等于n的正整数中与n互质的数的数目.
+        // 打表 phi[n] will store Euler's Phi(n).
+        internal static int[] EulerPhiTable(int n)
+        {
+            FactorTable(n);
+            phi = new int[n + 1];
+            int i, j;
+            phi[1] = 1;
+            for (i = 3; i <= n; i += 2)
+            {
+                j = i / factor[i];
+                phi[i] = phi[j] * (factor[i] - (j % factor[i] != 0 ? 1 : 0));
+            }
+            for (i = 2; i <= n; i += 2)
+                phi[i] = (i & 3) != 0 ? phi[i >> 1] : (phi[i >> 1] << 1);
+            return phi;
+        }
+
+        // 直接计算
+        internal static long GetEulerPhi(long x)
+        {
+            long res = x, a = x;
+            for (int i = 2; i * i <= a; ++i)
+                if (a % i == 0)
+                {
+                    res = res / i * (i - 1);
+                    while (a % i == 0) a /= i;
+                }
+            if (a > 1) res = res / a * (a - 1);
+            return res;
+        }
+    }
+
     static class ReuseFunctions
     {
+        /// <summary>
+        /// KMP关键算法-next映射
+        /// </summary>
+        internal static int[] Kmp(this string s)
+        {
+            int[] next = new int[s.Length];
+            next[0] = -1;
+
+            for (int i = 1; i < next.Length; ++i)
+            {
+                int nexti = next[i - 1] + 1;
+                while (nexti >= 0 && s[nexti] != s[i])
+                    nexti = nexti > 0 ? next[nexti - 1] + 1 : -1;
+                next[i] = nexti;
+            }
+
+            return next;
+        }
+
         /// <summary>
         /// 矩阵枚举上下左右四个方向
         /// </summary>
@@ -117,6 +198,19 @@ namespace ConsoleCore1
                 if (sr != s0) dg[sr] = new();
                 dg[sr].Add((dt, le));
                 s0 = sr; t0 = dt;
+            }
+            return dg;
+        }
+
+        internal static Dictionary<int, List<(int, int)>> UndirectedGraphWithLength(this int[][] edges)
+        {
+            Dictionary<int, List<(int, int)>> dg = new();
+            foreach ((int a, int b, int l) in edges.EnumLengthEdges())
+            {
+                if (!dg.ContainsKey(a)) dg[a] = new();
+                dg[a].Add((b, l));
+                if (!dg.ContainsKey(b)) dg[b] = new();
+                dg[b].Add((a, l));
             }
             return dg;
         }
@@ -1270,6 +1364,38 @@ namespace ConsoleCore1
         }
     }
 
+    class ModInt
+    {
+        int mod;
+        public int Value { get; private set; } = 0;
+        public ModInt(int m = 1000000007) => mod = m;
+        public int Add(int x)
+        {
+            Value += x;
+            if (Value >= mod) Value -= mod;
+            return Value;
+        }
+        public int Sub(int x)
+        {
+            Value -= x;
+            if (Value < 0) Value += mod;
+            return Value;
+        }
+        public int Multi(int x)
+        {
+            long p = (long)Value * x;
+            p %= mod;
+            return Value = (int)p;
+        }
+
+        public int Pow(int x)
+        {
+            int r;
+            if (mod == 1 || Value % mod == 0 && x != 0) return 0;
+            for (Value %= mod, r = 1; x != 0; r = (x & 1) != 0 ? r * Value % mod : r, Value = Value * Value % mod, x >>= 1) ;
+            return r % mod;
+        }
+    }
 
     static class Common
     {

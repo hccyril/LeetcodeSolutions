@@ -74,7 +74,7 @@ namespace ConsoleCore1
 
             // general run
             //new MyTester().Test();
-            P1203项目管理.Run();
+            P0668乘法表中第k小的数.Run();
 
             // all - count time result
             time = System.Environment.TickCount - time;
