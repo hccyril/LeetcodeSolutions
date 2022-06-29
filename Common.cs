@@ -105,9 +105,9 @@ namespace ConsoleCore1
         internal static IEnumerable<(int ni, int nj)> FourDir(int m, int n, int i, int j)
         {
             if (i > 0) yield return (i - 1, j);
-            if (i < m) yield return (i + 1, j);
+            if (i < m - 1) yield return (i + 1, j);
             if (j > 0) yield return (i, j - 1);
-            if (j < n) yield return (i, j + 1);
+            if (j < n - 1) yield return (i, j + 1);
         }
 
         /// <summary>
@@ -290,6 +290,24 @@ namespace ConsoleCore1
                 }
             }
             return arr;
+        }
+
+        public static int LowerBound(this IList<int> list, int target, int l = 0, int r = -1)
+        {
+            if (r < 0) r = list.Count;
+            if (l == r) return l;
+            int mid = l + r >> 1;
+            if (list[mid] < target) return list.LowerBound(target, mid + 1, r);
+            else return list.LowerBound(target, l, mid);
+        }
+
+        public static int UpperBound(this IList<int> list, int target, int l = 0, int r = -1)
+        {
+            if (r < 0) r = list.Count;
+            if (l == r) return l;
+            int mid = l + r >> 1;
+            if (list[mid] <= target) return list.UpperBound(target, mid + 1, r);
+            else return list.UpperBound(target, l, mid);
         }
     }
 
@@ -1369,6 +1387,7 @@ namespace ConsoleCore1
         int mod;
         public int Value { get; private set; } = 0;
         public ModInt(int m = 1000000007) => mod = m;
+        
         public int Add(int x)
         {
             Value += x;
@@ -1391,9 +1410,61 @@ namespace ConsoleCore1
         public int Pow(int x)
         {
             int r;
-            if (mod == 1 || Value % mod == 0 && x != 0) return 0;
+            if (mod == 1 || Value % mod == 0 && x != 0) return Value = 0;
             for (Value %= mod, r = 1; x != 0; r = (x & 1) != 0 ? r * Value % mod : r, Value = Value * Value % mod, x >>= 1) ;
-            return r % mod;
+            return Value = r % mod;
+        }
+        #region 复制
+        ModInt(ModInt b)
+        {
+            mod = b.mod;
+            Value = b.Value;
+        }
+        public static ModInt operator +(ModInt a, int x)
+        {
+            ModInt b = new(a);
+            b.Add(x);
+            return b;
+        }
+        public static ModInt operator -(ModInt a, int x)
+        {
+            ModInt b = new(a);
+            b.Sub(x);
+            return b;
+        }
+        public static ModInt operator *(ModInt a, int x)
+        {
+            ModInt b = new(a);
+            b.Multi(x);
+            return b;
+        }
+        #endregion 
+    }
+
+    // 位数组拓展，每个元素取值1-4，占2个位
+    class B4Array
+    {
+        BitArray ba;
+        int map;
+        public B4Array(int n) => ba = n > 16 ? new(n << 1) : null;
+        int Get(int bi) => ba != null ? ba[bi] ? 1 : 0 : (map & 1 << bi) != 0 ? 1 : 0;
+        void Set(int bi, bool val) 
+        {
+            if (ba != null) ba[bi] = val;
+            else
+            {
+                int bit = 1 << bi;
+                if ((map & bit) != 0 != val) map ^= bit;
+            }
+        }
+        public int this[int index]
+        {
+            get => Get(index << 1) << 1 | Get(index << 1 | 1);
+            set
+            {
+                Set(index << 1, (value & 2) != 0);
+                Set(index << 1 | 1, (value & 1) != 0);
+            }
         }
     }
 

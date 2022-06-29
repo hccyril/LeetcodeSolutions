@@ -16,11 +16,11 @@ namespace ConsoleCore1
      * 负数右移并不等于除以2，例如-3 >> 1 == -2，但是-3 / 2 还是对的（-1）// P493
      * BinarySearch的返回值为>=0时不一定是最左边或者最右边的值，当数组存在相同值而且要取upper_bound或者lower_bound时要特别注意！// P493
      * #P0222 二分搜索的标准写法：
-        int mid = l + (r - l + 1 >> 1);
+        int mid = l + (r - l + 1 >> 1); // mid = l + r + 1 >> 1
         if (Find(root, mid) == null) r = mid - 1;
         else l = mid;
        #P0668 二分搜索定式2：
-        mid = l + (r - l >> 1)
+        mid = l + (r - l >> 1) // mid = l + r >> 1
         r = mid
         l = mid + 1
      * #P0269 火星词典(hard)
