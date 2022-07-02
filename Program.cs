@@ -74,7 +74,7 @@ namespace ConsoleCore1
 
             // general run
             //new MyTester().Test();
-            P0030串联所有单词的子串.Run();
+            // PXXXX.Run();
 
             // all - count time result
             time = System.Environment.TickCount - time;
