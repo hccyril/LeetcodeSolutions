@@ -10,7 +10,32 @@ namespace ConsoleCore1
     // sortedset
     internal class P0715Range模块
     {
-        class RangeStruct: IComparable<RangeStruct>
+        // 2022/7/12 用 Interval类重写，快了不少 1600ms -> 320ms
+        public class RangeModule
+        {
+            SortedSet<Interval> sort = new();
+
+            public void AddRange(int left, int right)
+            {
+                sort.AddRange(left, right - 1);
+            }
+
+            public bool QueryRange(int left, int right)
+            {
+                --right;
+                if (sort.TryGetValue(new(left), out var rs))
+                    return rs.start <= left && rs.end >= right;
+                return false;
+            }
+
+            public void RemoveRange(int left, int right)
+            {
+                sort.RemoveRange(left, right - 1);
+            }
+        }
+
+        // ver1
+        class RangeStruct : IComparable<RangeStruct>
         {
             public int key, start, end;
             public int CompareTo(RangeStruct other) => key.CompareTo(other.key);

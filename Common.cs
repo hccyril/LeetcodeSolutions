@@ -69,6 +69,16 @@ namespace ConsoleCore1
             if (a > 1) res = res / a * (a - 1);
             return res;
         }
+
+        // ### 阶乘求余 Power Mod
+        // Returns a^b (mod c). Assume c>0 and 0^0=1.
+        internal static int PowerMod(long a, int b, int m)
+        {
+            long r;
+            if (m == 1 || a % m == 0 && b != 0) return 0;
+            for (a %= m, r = 1L; b > 0; r = (b & 1) != 0 ? r * a % m : r, a = a * a % m, b >>= 1) ;
+            return (int)(r % m);
+        }
     }
 
     static class ReuseFunctions
@@ -1407,13 +1417,22 @@ namespace ConsoleCore1
             return Value = (int)p;
         }
 
-        public int Pow(int x)
+        public int MultiPow(long a, int b)
         {
-            int r;
-            if (mod == 1 || Value % mod == 0 && x != 0) return Value = 0;
-            for (Value %= mod, r = 1; x != 0; r = (x & 1) != 0 ? r * Value % mod : r, Value = Value * Value % mod, x >>= 1) ;
-            return Value = r % mod;
+            long r;
+            if (mod == 1 || a % mod == 0 && b != 0) return 0;
+            for (a %= mod, r = 1L; b > 0; r = (b & 1) != 0 ? r * a % mod : r, a = a * a % mod, b >>= 1) ;
+            return Value = (int)(r * Value % mod);
         }
+
+        // WRONG
+        //public int Pow(int x)
+        //{
+        //    int r;
+        //    if (mod == 1 || Value % mod == 0 && x != 0) return Value = 0;
+        //    for (Value %= mod, r = 1; x != 0; r = (x & 1) != 0 ? r * Value % mod : r, Value = Value * Value % mod, x >>= 1) ;
+        //    return Value = r % mod;
+        //}
         #region 复制
         ModInt(ModInt b)
         {
@@ -1519,7 +1538,92 @@ namespace ConsoleCore1
             return JsonConvert.DeserializeObject<T>(File.ReadAllText(path));
         }
     }
+    #region 区间类
+    /**
+     * 注意：只适用于不相交区间
+     * */
 
+    public class Interval : IComparable<Interval>
+    {
+        public int start, end;
+        public Interval() { }
+        public Interval(int val) => start = end = val;
+        public int CompareTo(Interval other)
+            => Math.Max(start, other.start) <= Math.Min(end, other.end) ? 0 :
+               start < other.start ? -1 : 1;
+    }
+    public static class IntervalExtensions
+    {
+        // 该方法添加任意区间 // from P715
+        public static void AddRange(this SortedSet<Interval> sort, int left, int right)
+        {
+            Interval rs = new() { start = left, end = right },
+                lv = new Interval(rs.start - 1), rv = new Interval(rs.end + 1);
+            foreach (var r in new List<Interval>(sort.GetViewBetween(lv, rv)))
+            {
+                sort.Remove(r);
+                if (r.start < rs.start) rs.start = r.start;
+                if (r.end > rs.end) rs.end = r.end;
+            }
+            sort.Add(rs);
+        }
+
+        // 移除任意区间 // from P715
+        public static void RemoveRange(this SortedSet<Interval> sort, int left, int right)
+        {
+            Interval lv = new Interval(left), rv = new Interval(right);
+            foreach (var r in new List<Interval>(sort.GetViewBetween(lv, rv)))
+            {
+                if (r.start >= left && r.end <= right)
+                    sort.Remove(r);
+                else if (r.start < left && r.end > right)
+                {
+                    sort.Remove(r);
+                    sort.Add(new() { start = r.start, end = left - 1 });
+                    sort.Add(new() { start = right + 1, end = r.end });
+                }
+                else if (r.start < left)
+                    r.end = left - 1;
+                else if (r.end > right)
+                    r.start = right + 1;
+            }
+        }
+
+        // 该方法假设添加的区间一定和现有的不相交
+        public static void MergeOne(this SortedSet<Interval> sort, Interval rs)
+        {
+            // if (sort.Contains(rs)) return; // 注意！如果题目没有假设新增的区间一定是不相交的，则这句是必要的！
+            Interval left = new Interval(rs.start - 1),
+                right = new Interval(rs.end + 1);
+            if (sort.TryGetValue(left, out var rl))
+            {
+                if (sort.TryGetValue(right, out var rr))
+                {
+                    sort.Remove(rr);
+                    rl.end = rr.end;
+                }
+                else
+                {
+                    rl.end = rs.end;
+                }
+            }
+            else
+            {
+                if (sort.TryGetValue(right, out var rr))
+                {
+                    rr.start = rs.start;
+                }
+                else
+                    sort.Add(rs);
+            }
+        }
+        public static void MergeInterval(this SortedSet<Interval> sort, SortedSet<Interval> s1)
+        {
+            foreach (var rs in s1)
+                MergeOne(sort, rs);
+        }
+    }
+    #endregion
     public static partial class SolutionExtensions
     {
         const int MOD = 1000000007;
