@@ -188,7 +188,7 @@ namespace ConsoleCore1
             return inds.Count;
         }
 
-        internal static int CountOne(this int n) => n == 0 ? 0 : 1 + CountOne(n & (n - 1));
+        internal static int CountOne(this int n) => n == 0 ? 0 : n == -2147483648 ? 1 : 1 + CountOne(n & (n - 1));
 
         internal static IEnumerable<(int, int, int)> EnumLengthEdges(this int[][] edges, bool isReverse = false)
             => isReverse ?
@@ -373,18 +373,12 @@ namespace ConsoleCore1
         Func<T, T, bool> comp;
         public Heap(Func<T, T, bool> comp) => this.comp = comp;
         bool Compare(int i, int j) => comp(GetAt(i), GetAt(j));
-        T swap;
         List<T> _list = new List<T>();
         T GetAt(int index) => _list[index - 1];
         public bool Any() => _list.Any();
         public int Count => _list.Count;
         public T Head => _list[0];
-        void Swap(int i, int j)
-        {
-            swap = _list[i - 1];
-            _list[i - 1] = _list[j - 1];
-            _list[j - 1] = swap;
-        }
+        void Swap(int i, int j) => (_list[i - 1], _list[j - 1]) = (_list[j - 1], _list[i - 1]);
         public void Push(T n)
         {
             _list.Add(n);
@@ -396,28 +390,41 @@ namespace ConsoleCore1
                 i = inext; inext = i >> 1;
             }
         }
+        public bool PushPop(T val)
+        {
+            if (comp(Head, val))
+            {
+                _list[0] = val;
+                SwapDown(1);
+                return true;
+            }
+            return false;
+        }
         public T Pop()
         {
-            T ans = _list[0];
-            _list[0] = _list[_list.Count - 1];
+            T val = _list.Last();
             _list.RemoveAt(_list.Count - 1);
-            int i = 1, inext;
-            while (true)
-            {
-                inext = i << 1;
-                if (inext <= Count)
-                {
-                    if (inext < Count && Compare(inext + 1, inext)) inext++;
-                    if (Compare(inext, i))
-                    {
-                        Swap(i, inext);
-                        i = inext;
-                        continue;
-                    }
-                }
-                break;
-            }
+            return PopPush(val);
+        }
+        public T PopPush(T val)
+        {
+            T ans = _list[0];
+            _list[0] = val;
+            SwapDown(1);
             return ans;
+        }
+        void SwapDown(int i)
+        {
+            int inext = i << 1;
+            if (inext <= Count)
+            {
+                if (inext < Count && Compare(inext + 1, inext)) ++inext;
+                if (Compare(inext, i))
+                {
+                    Swap(i, inext);
+                    SwapDown(inext);
+                }
+            }
         }
         public T[] ToArray() => _list.ToArray();
     }
@@ -500,8 +507,7 @@ namespace ConsoleCore1
             Swap(i, Count);
             _list.RemoveAt(_list.Count - 1);
 
-            bool hasSwapUp = SwapUp(i);
-            if (!hasSwapUp) SwapDown(i);
+            if (!SwapUp(i)) SwapDown(i);
         }
 
         bool SwapUp(int ind)
@@ -1554,6 +1560,17 @@ namespace ConsoleCore1
     }
     public static class IntervalExtensions
     {
+        // 最新最优 // from 731
+        public static bool Merge(this SortedSet<Interval> s, Interval ra)
+        {
+            while (s.TryGetValue(new() { start = ra.start - 1, end = ra.end + 1 }, out var r))
+            {
+                s.Remove(r);
+                (ra.start, ra.end) = (Math.Min(r.start, ra.start), Math.Max(r.end, ra.end));
+            }
+            return s.Add(ra);
+        }
+
         // 该方法添加任意区间 // from P715
         public static void AddRange(this SortedSet<Interval> sort, int left, int right)
         {

@@ -26,14 +26,19 @@ namespace ConsoleCore1
         }
         internal void Test()
         {
-            int[] arr1 = { 1, 2, 3 };
-            int[][] arr = { arr1 }; //Array.Empty<int[]>();
-            var it = arr.OrderBy(t => t.First()).GetEnumerator();
-            Console.WriteLine(it.Current);
-            it.MoveNext();
-            Console.WriteLine(it.Current);
+            int i = 3, j = 4;
+            double f = (double)j / i;
+            string s = $"{i},{j}: {f:f4}";
+            Console.WriteLine(s);
+
+            //int[] arr1 = { 1, 2, 3 };
+            //int[][] arr = { arr1 }; //Array.Empty<int[]>();
+            //var it = arr.OrderBy(t => t.First()).GetEnumerator();
+            //Console.WriteLine(it.Current);
+            //it.MoveNext();
+            //Console.WriteLine(it.Current);
             //SortedDictionary<int, int> sd = new();
-            
+
             //List<int> list = new();
             //list.BinarySearch()
             //Array.BinarySearch(sd.Keys, 80);
