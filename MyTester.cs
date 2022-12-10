@@ -26,10 +26,18 @@ namespace ConsoleCore1
         }
         internal void Test()
         {
-            int i = 3, j = 4;
-            double f = (double)j / i;
-            string s = $"{i},{j}: {f:f4}";
-            Console.WriteLine(s);
+            Stack<int> stk = new();
+            for (int i = 0; i < 5; ++i)
+                stk.Push(i);
+            foreach (int i in stk.Reverse())
+                Console.WriteLine(i);
+            while (stk.Any())
+                Console.WriteLine(stk.Pop());
+
+            //int i = 3, j = 4;
+            //double f = (double)j / i;
+            //string s = $"{i},{j}: {f:f4}";
+            //Console.WriteLine(s);
 
             //int[] arr1 = { 1, 2, 3 };
             //int[][] arr = { arr1 }; //Array.Empty<int[]>();

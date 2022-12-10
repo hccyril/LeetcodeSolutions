@@ -105,7 +105,7 @@ namespace ConsoleCore1
         /// <summary>
         /// 矩阵枚举上下左右四个方向
         /// </summary>
-        internal static IEnumerable<(int ni, int nj)> FourDir(this int[][] mx, int i, int j)
+        internal static IEnumerable<(int ni, int nj)> FourDir<T>(this T[][] mx, int i, int j)
         {
             if (i > 0) yield return (i - 1, j);
             if (i < mx.Length - 1) yield return (i + 1, j);
@@ -195,6 +195,21 @@ namespace ConsoleCore1
             edges.OrderBy(t => t[1]).ThenBy(t => t[0]).ThenBy(t => t[2]).Select(ed => (ed[1], ed[0], ed[2])) :
             edges.OrderBy(t => t[0]).ThenBy(t => t[1]).ThenBy(t => t[2]).Select(ed => (ed[0], ed[1], ed[2]));
         
+        /// <summary>
+        /// 有向图，无边长
+        /// </summary>
+        internal static Dictionary<int, List<int>> DirectedGraphNoLength(this int[][] edges)
+        {
+            Dictionary<int, List<int>> dg = new();
+            foreach (var edge in edges)
+            {
+                int a = edge[0], b = edge[1];
+                if (!dg.ContainsKey(a)) dg[a] = new();
+                dg[a].Add(b);
+            }
+            return dg;
+        }
+
         /// <summary>
         /// edge=(src,dst,len),支持重复边（取最短边），最终生成字典表
         /// </summary>
@@ -1380,7 +1395,7 @@ namespace ConsoleCore1
     {
         int[] arr;
         public Fenwick(int n) => arr = new int[n + 1];
-        public void Update(int i, int inc)
+        public void Update(int i, int inc = 1)
         {
             for (++i; i < arr.Length; arr[i] += inc, i += i & -i);
         }
@@ -1554,6 +1569,7 @@ namespace ConsoleCore1
         public int start, end;
         public Interval() { }
         public Interval(int val) => start = end = val;
+        public int Count => end - start + 1;
         public int CompareTo(Interval other)
             => Math.Max(start, other.start) <= Math.Min(end, other.end) ? 0 :
                start < other.start ? -1 : 1;
@@ -1665,5 +1681,17 @@ namespace ConsoleCore1
             p %= MOD;
             return (int)p;
         }
+
+        public static int Divide(this int x, int y)
+        {
+            long p = x;
+            while (p % x != 0) p += MOD;
+            return (int)(p / x);
+        }
     }
+
+    /* Divide: 除法：求 t = x / y (mod 1e9+7)
+     * 例如 3 / 2 = 500000005 （= (3 + 1000000007) / 2)
+     * 除法貌似只能暴力解
+     */
 }
