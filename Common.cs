@@ -1570,6 +1570,7 @@ namespace ConsoleCore1
         public Interval() { }
         public Interval(int val) => start = end = val;
         public int Count => end - start + 1;
+        public bool Valid => Count > 0;
         public int CompareTo(Interval other)
             => Math.Max(start, other.start) <= Math.Min(end, other.end) ? 0 :
                start < other.start ? -1 : 1;
