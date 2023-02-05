@@ -240,16 +240,35 @@ namespace ConsoleCore1
             return dg;
         }
 
-        internal static Dictionary<int, List<int>> UndirectedGraphNoLength(this int[][] edges)
+        /// <summary>
+        /// 无向图，边长为1
+        /// </summary>
+        /// <param name="edges"></param>
+        /// <param name="n">需要创建空列表时请输入n</param>
+        /// <returns>目标节点字典表</returns>
+        internal static Dictionary<int, List<int>> UndirectedGraphNoLength(this int[][] edges, int n = 0)
         {
             Dictionary<int, List<int>> ug = new();
-            foreach (var ed in edges)
+            if (n > 0)
             {
-                int a = ed[0], b = ed[1];
-                if (!ug.ContainsKey(a)) ug[a] = new();
-                ug[a].Add(b);
-                if (!ug.ContainsKey(b)) ug[b] = new();
-                ug[b].Add(a);
+                for (int i = 0; i < n; ++i) ug[i] = new();
+                foreach (var ed in edges)
+                {
+                    int a = ed[0], b = ed[1];
+                    ug[a].Add(b);
+                    ug[b].Add(a);
+                }
+            }
+            else
+            {
+                foreach (var ed in edges)
+                {
+                    int a = ed[0], b = ed[1];
+                    if (!ug.ContainsKey(a)) ug[a] = new();
+                    ug[a].Add(b);
+                    if (!ug.ContainsKey(b)) ug[b] = new();
+                    ug[b].Add(a);
+                }
             }
             return ug;
         }
