@@ -1573,26 +1573,111 @@ namespace ConsoleCore1
         }
 
         internal static T ReadInput<T>(int id)
-        {
-            string path = $"..\\..\\..\\TestCase{id:D4}.json";
-            return JsonConvert.DeserializeObject<T>(File.ReadAllText(path));
-        }
+            => ToTestInput<T>(File.ReadAllText($"..\\..\\..\\TestCase{id:D4}.json"));
+
+        internal static T ToTestInput<T>(string json)
+            => JsonConvert.DeserializeObject<T>(json);
     }
     #region 区间类
+
+    // 更通用的封装类 - 850
+    // TODO 应用于之前的题解
+    public class InSet : SortedSet<Interval>
+    {
+        public int Length { get; private set; }
+
+        public void Update(Interval r)
+        {
+            int val = r.val;
+            Dictionary<int, InSet> di = new();
+            InSet ir = new(); ir.Add(r);
+            Interval sk = new() { start = r.start - 1, end = r.end + 1 };
+            while (TryGetValue(sk, out var r0))
+            {
+                Remove(r0); Length -= r0.Count;
+                if (ir.TryGetValue(r0, out r))
+                {
+                    ir.Remove(r);
+                    var it = r0.Intersect(r);
+                    it.val += r.val;
+                    if (it.Valid)
+                    {
+                        if (!di.ContainsKey(it.val)) di[it.val] = new();
+                        di[it.val].Combine(it);
+                    }
+
+                    foreach (var rs in r.Cut(it))
+                        ir.Combine(rs);
+
+                    foreach (var r0s in r0.Cut(it))
+                    {
+                        if (!di.ContainsKey(r0s.val)) di[r0s.val] = new();
+                        di[r0s.val].Combine(r0s);
+                    }
+                }
+                else
+                {
+                    if (!di.ContainsKey(r0.val)) di[r0.val] = new();
+                    di[r0.val].Combine(r0);
+                }
+            }
+            if (val > 0)
+            {
+                if (!di.ContainsKey(val)) di[val] = new();
+                foreach (var rs in ir)
+                    di[val].Combine(rs);
+            }
+
+            foreach ((int k, var s) in di)
+                foreach (var si in s)
+                {
+                    Add(si);
+                    Length += si.Count;
+                }
+        }
+
+        bool Combine(Interval ra) // 就是Merge，为了不重复所以改名
+        {
+            while (TryGetValue(new() { start = ra.start - 1, end = ra.end + 1 }, out var r))
+            {
+                Remove(r);
+                (ra.start, ra.end) = (Math.Min(r.start, ra.start), Math.Max(r.end, ra.end));
+            }
+            return Add(ra);
+        }
+    }
+
     /**
      * 注意：只适用于不相交区间
      * */
 
     public class Interval : IComparable<Interval>
     {
+        public int val = 1; // new added
         public int start, end;
         public Interval() { }
         public Interval(int val) => start = end = val;
         public int Count => end - start + 1;
-        public bool Valid => Count > 0;
+        public bool Valid => end >= start && val > 0;
         public int CompareTo(Interval other)
             => Math.Max(start, other.start) <= Math.Min(end, other.end) ? 0 :
                start < other.start ? -1 : 1;
+
+        public Interval Merge(Interval other)
+            => new() { start = Math.Min(start, other.start), end = Math.Max(end, other.end), val = val };
+
+        public Interval Intersect(Interval other)
+            => new() { start = Math.Max(start, other.start), end = Math.Min(end, other.end), val = val };
+
+        // 截取一段区间，返回剩下的区间（有可能是0-2个）
+        public Interval[] Cut(Interval other)
+        {
+            if (other.Count <= 0) return new Interval[] { new() { start = start, end = end, val = val } }; 
+            List<Interval> li = new();
+            if (other.start > start) li.Add(new() { start = start, end = Math.Min(end, other.start - 1), val = val });
+            if (other.end < end) li.Add(new() { start = Math.Max(start, other.end + 1), end = end, val = val });
+            return li.ToArray();
+        }
     }
     public static class IntervalExtensions
     {
