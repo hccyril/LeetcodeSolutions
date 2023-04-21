@@ -158,6 +158,15 @@ namespace ConsoleCore1
                 }
             }
         }
+		
+		// 填充某个值
+		internal static void DfsFill(this int[][] mx, int i, int j, int val) 
+		{
+			int org = mx[i][j]; mx[i][j] = val;
+			foreach ((int ni, int nj) in mx.FourDir(i, j))
+				if (mx[ni][nj] == org)
+					mx.DfsFill(ni, nj, val);
+		}
 
         // 单调栈
         internal static Stack<(int, int)> BuildStack(this int[] nums)
