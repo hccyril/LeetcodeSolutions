@@ -36,7 +36,7 @@ namespace ConsoleCore1
             while (qu.Any())
             {
                 (int i, int j, int h, int p) = qu.Dequeue();
-                foreach ((int ni, int nj) in ReuseFunctions.FourDir(m, n, i, j))
+                foreach ((int ni, int nj) in GraphEX.FourDir(m, n, i, j))
                 {
                     if (forest[ni][nj] > 0 && map[ni, nj] < h)
                     {

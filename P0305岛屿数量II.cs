@@ -61,7 +61,7 @@ namespace ConsoleCore1
 
                 dic[(x, y)] = i;
                 hs.Add(i);
-                foreach ((int nx, int ny) in ReuseFunctions.FourDir(m, n, x, y))
+                foreach ((int nx, int ny) in GraphEX.FourDir(m, n, x, y))
                 {
                     if (dic.ContainsKey((nx, ny)))
                     {

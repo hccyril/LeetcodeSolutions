@@ -499,14 +499,14 @@ namespace ConsoleCore1
     public class SHeap<K, V>
     {
         Func<V, V, bool> comp;
-        public bool KeepKey { private get; set; } = false;
+        bool _keepKey = false;
         /// <summary>
         /// 在Dijkstra等需要维护一次访问的场景记得设置KeepKey=true
         /// </summary>
         public SHeap(Func<V, V, bool> comp, bool keepKey = false)
         {
             this.comp = comp;
-            KeepKey = keepKey;
+            _keepKey = keepKey;
         }
         bool Compare(int i, int j) => comp(GetAt(i), GetAt(j));
 
@@ -564,7 +564,7 @@ namespace ConsoleCore1
         {
             (V _, int i) = _dic[key];
             RemoveAt(i);
-            if (!KeepKey) _dic.Remove(key);
+            if (!_keepKey) _dic.Remove(key);
         }
 
         void RemoveAt(int i)

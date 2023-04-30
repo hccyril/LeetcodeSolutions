@@ -33,8 +33,7 @@ namespace ConsoleCore1
             for (int k = -1; k < n; ++k)
                 if (!dg.ContainsKey(k))
                     dg[k] = new();
-            SHeap<(int, int), long> hp = new((a, b) => a < b);
-            hp.KeepKey = true;
+            SHeap<(int, int), long> hp = new((a, b) => a < b, true);
             hp.Add((src1, src2), 0L);
             while (hp.Any())
             {

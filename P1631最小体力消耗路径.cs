@@ -18,8 +18,7 @@ namespace ConsoleCore1
         // ver2: Dijkstra
         public int MinimumEffortPath(int[][] heights)
         {
-            SHeap<(int, int), int> hp = new((a, b) => a < b);
-            hp.KeepKey = true;
+            SHeap<(int, int), int> hp = new((a, b) => a < b, true);
             hp.Add((0, 0), 0);
             while (hp.Any())
             {

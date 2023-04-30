@@ -118,6 +118,7 @@ namespace ConsoleCore1.contest
                 
                 return cost
          * */
+        #endregion
 
         #region Problem E
         public int SolveE(int x)

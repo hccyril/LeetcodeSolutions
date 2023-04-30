@@ -17,8 +17,7 @@ namespace ConsoleCore1
             Array.Sort(jobs);
             Array.Reverse(jobs);
 
-            SHeap<long, int> hp = new((a, b) => a < b);
-            hp.KeepKey = true;
+            SHeap<long, int> hp = new((a, b) => a < b, true);
             hp.Add(0L, 0);
             int[] workers = new int[k];
             while (hp.Any())
