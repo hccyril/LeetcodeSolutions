@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace ConsoleCore1
 {
+    /// <summary>
+    /// 数论库
+    /// </summary>
     static class MathEX
     {
         internal static int Gcd(int a, int b) => b != 0 ? Gcd(b, a % b) : a;
@@ -81,27 +84,12 @@ namespace ConsoleCore1
         }
     }
 
-    static class ReuseFunctions
-    {
         /// <summary>
-        /// KMP关键算法-next映射
+    /// 图论库
         /// </summary>
-        internal static int[] Kmp(this string s)
+    static class GraphEX
         {
-            int[] next = new int[s.Length];
-            next[0] = -1;
-
-            for (int i = 1; i < next.Length; ++i)
-            {
-                int nexti = next[i - 1] + 1;
-                while (nexti >= 0 && s[nexti] != s[i])
-                    nexti = nexti > 0 ? next[nexti - 1] + 1 : -1;
-                next[i] = nexti;
-            }
-
-            return next;
-        }
-
+        #region 图论-矩阵
         /// <summary>
         /// 矩阵枚举上下左右四个方向
         /// </summary>
@@ -158,47 +146,14 @@ namespace ConsoleCore1
                 }
             }
         }
+        #endregion 
 		
-		// 填充某个值
-		internal static void DfsFill(this int[][] mx, int i, int j, int val) 
-		{
-			int org = mx[i][j]; mx[i][j] = val;
-			foreach ((int ni, int nj) in mx.FourDir(i, j))
-				if (mx[ni][nj] == org)
-					mx.DfsFill(ni, nj, val);
-		}
-
-        // 单调栈
-        internal static Stack<(int, int)> BuildStack(this int[] nums)
-        {
-            Stack<(int, int)> stk = new();
-            int n = -1;
-            for (int i = 0; i < nums.Length; ++i)
-                if (nums[i] > n)
-                {
-                    n = nums[i];
-                    stk.Push((i, n));
-                }
-            return stk;
-        }
-
+        #region 图论-最短路径
         /// <summary>
-        /// 最长递增子序列（贪心+二分解法）(from 300)
+        /// 曼哈顿距离：d = |x1 - x2| + |y1 - y2|
         /// </summary>
-        internal static int LIS(this IEnumerable<int> nums)
-        {
-            List<int> inds = new();
-            foreach (int n in nums)
-            {
-                int i = ~inds.BinarySearch(n);
-                if (i == inds.Count) inds.Add(n);
-                else if (i >= 0) inds[i] = n;
-            }
-            return inds.Count;
-        }
-
-        internal static int CountOne(this int n) => n == 0 ? 0 : n == -2147483648 ? 1 : 1 + CountOne(n & (n - 1));
-
+        internal static int Dist(this (int x, int y) p1, (int x, int y) p2)
+            => Math.Abs(p1.x - p2.x) + Math.Abs(p1.y - p2.y);
         internal static IEnumerable<(int, int, int)> EnumLengthEdges(this int[][] edges, bool isReverse = false)
             => isReverse ?
             edges.OrderBy(t => t[1]).ThenBy(t => t[0]).ThenBy(t => t[2]).Select(ed => (ed[1], ed[0], ed[2])) :
@@ -282,10 +237,12 @@ namespace ConsoleCore1
             return ug;
         }
 
-        internal static long Dijkstra(this int[][] edges, int src, int dest)
+        internal static long Dijkstra(this int[][] edges, int src, int dest, bool isDirectGraph = true)
         {
-            var dg = edges.DirectedGraphWithLength();
-            SHeap<int, long> hp = new((a, b) => a < b);
+            var dg = isDirectGraph ?
+                edges.DirectedGraphWithLength() :
+                edges.UndirectedGraphWithLength();
+            SHeap<int, long> hp = new((a, b) => a < b, true);
             hp.Add(src, 0L);
             while (hp.Any())
             {
@@ -344,6 +301,70 @@ namespace ConsoleCore1
             }
             return arr;
         }
+        #endregion
+    }
+    static class ReuseFunctions
+    {
+        /// <summary>
+        /// KMP关键算法-next映射
+        /// </summary>
+        internal static int[] Kmp(this string s)
+        {
+            int[] next = new int[s.Length];
+            next[0] = -1;
+
+            for (int i = 1; i < next.Length; ++i)
+            {
+                int nexti = next[i - 1] + 1;
+                while (nexti >= 0 && s[nexti] != s[i])
+                    nexti = nexti > 0 ? next[nexti - 1] + 1 : -1;
+                next[i] = nexti;
+            }
+
+            return next;
+        }
+
+        // 单调栈
+        internal static Stack<(int, int)> BuildStack(this int[] nums)
+        {
+            Stack<(int, int)> stk = new();
+            int n = -1;
+            for (int i = 0; i < nums.Length; ++i)
+                if (nums[i] > n)
+                {
+                    n = nums[i];
+                    stk.Push((i, n));
+                }
+            return stk;
+        }
+
+        /// <summary>
+        /// 最长递增子序列（贪心+二分解法）(from 300)
+        /// </summary>
+        internal static int LIS(this IEnumerable<int> nums)
+        {
+            List<int> inds = new();
+            foreach (int n in nums)
+            {
+                int i = ~inds.BinarySearch(n);
+                if (i == inds.Count) inds.Add(n);
+                else if (i >= 0) inds[i] = n;
+            }
+            return inds.Count;
+        }
+
+        internal static BitArray ToBitArray(this int n, Func<int, bool> tf)
+        {
+            BitArray ba = new(n);
+            for (int i = 0; i < n; ++i)
+                ba[i] = tf(i);
+            return ba;
+        }
+
+        /// <summary>
+        /// 统计二进制中1的个数
+        /// </summary>
+        internal static int CountOne(this int n) => n == 0 ? 0 : n == -2147483648 ? 1 : 1 + CountOne(n & (n - 1));
 
         public static int LowerBound(this IList<int> list, int target, int l = 0, int r = -1)
         {
@@ -479,7 +500,14 @@ namespace ConsoleCore1
     {
         Func<V, V, bool> comp;
         public bool KeepKey { private get; set; } = false;
-        public SHeap(Func<V, V, bool> comp) => this.comp = comp;
+        /// <summary>
+        /// 在Dijkstra等需要维护一次访问的场景记得设置KeepKey=true
+        /// </summary>
+        public SHeap(Func<V, V, bool> comp, bool keepKey = false)
+        {
+            this.comp = comp;
+            KeepKey = keepKey;
+        }
         bool Compare(int i, int j) => comp(GetAt(i), GetAt(j));
 
         V GetAt(int index) => _dic[_list[index - 1]].val;
@@ -733,6 +761,26 @@ namespace ConsoleCore1
         public int GroupCount() => Enumerable.Range(0, parent.Length).Select(i => Find(i)).Distinct().Count();
     }
 
+	/* 并查集 - 连通图专用（节点编号1-n，实时维护GroupCount）- P1579
+	class UnionFind
+	{
+		int[] parent;
+		public int GroupCount {get; private set;}
+		public UnionFind(int n) { 
+			parent = Enumerable.Range(0, n).ToArray();
+			GroupCount = n;
+		}
+		public bool Check(int index1, int index2) => Find(index1) == Find(index2);
+		public void Union(int index1, int index2) {
+			if (!Check(index1, index2)) {
+				parent[Find(index2)] = Find(index1);
+				--GroupCount;
+			}
+		}
+		public int Find(int index) => parent[index - 1] != index - 1 ? (parent[index - 1] = Find(parent[index - 1] + 1)) : parent[index - 1];
+	}
+	*/
+	
     // 单词前缀树 - 212单词搜索，1032字符流
 
     /// <summary>
@@ -1562,19 +1610,6 @@ namespace ConsoleCore1
 
         public static (int x, int y) UnPair(int[] pair) => (pair[0], pair[1]);
 
-        internal static void test()
-        {
-            List<int[]> al = new List<int[]>();
-            int[] ar = { 10, 20 };
-            al.Add(ar);
-            (int x, int y) = UnPair(al.First());
-            Console.WriteLine($"x={x} y={y}");
-
-            Point p = new Point { x = 40, y = 50 };
-            (x, y) = p;
-
-        }
-
         internal static int[] ReadArray(int id)
         {
             string path = $"..\\..\\..\\TestCase{id:D4}.json";
@@ -1584,7 +1619,7 @@ namespace ConsoleCore1
         internal static T ReadInput<T>(int id)
             => ToTestInput<T>(File.ReadAllText($"..\\..\\..\\TestCase{id:D4}.json"));
 
-        internal static T ToTestInput<T>(string json)
+        internal static T ToTestInput<T>(this string json)
             => JsonConvert.DeserializeObject<T>(json);
     }
     #region 区间类
