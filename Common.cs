@@ -17,7 +17,7 @@ namespace ConsoleCore1
         internal static int Gcd(int a, int b) => b != 0 ? Gcd(b, a % b) : a;
 
         // factor[n] 表示 n的最大因子，所以 n 是质数 iff factor[n] == n
-        static int[] factor;
+        static int[] factor = Array.Empty<int>();
 
         internal static int[] FactorTable(int n)
         {
@@ -88,7 +88,7 @@ namespace ConsoleCore1
     /// 图论库
         /// </summary>
     static class GraphEX
-        {
+    {
         #region 图论-矩阵
         /// <summary>
         /// 矩阵枚举上下左右四个方向
@@ -366,6 +366,9 @@ namespace ConsoleCore1
         /// </summary>
         internal static int CountOne(this int n) => n == 0 ? 0 : n == -2147483648 ? 1 : 1 + CountOne(n & (n - 1));
 
+        /// <summary>
+        /// 返回第一个大于等于target的位置
+        /// </summary>
         public static int LowerBound(this IList<int> list, int target, int l = 0, int r = -1)
         {
             if (r < 0) r = list.Count;
@@ -375,6 +378,9 @@ namespace ConsoleCore1
             else return list.LowerBound(target, l, mid);
         }
 
+        /// <summary>
+        /// 返回第一个严格大于target的位置
+        /// </summary>
         public static int UpperBound(this IList<int> list, int target, int l = 0, int r = -1)
         {
             if (r < 0) r = list.Count;

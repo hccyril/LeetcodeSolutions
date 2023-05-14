@@ -8,6 +8,8 @@ namespace ConsoleCore1.contest
 {
     // 现场赛，最后一刻才AC
     // 266 / 2631	呱呱编程实验室 	17	1:44:37	 0:01:55	 0:05:25	 1:24:37 * 1	 0:58:21 * 3
+    // 2023/2/11 更新：最后一题其实是错的，排名下降了一倍：
+    // 519 / 2631	呱呱编程实验室 	12	1:29:37	 0:01:55	 0:05:25	 1:24:37 * 1	
     internal class LC_BiC097_20230204
     {
         #region Problem A
@@ -104,7 +106,58 @@ namespace ConsoleCore1.contest
 
         #region Problem D
         // 居然出了一题Tarjan，幸亏找回了代码在哪里
+        // 更新：把图改成无向图然后Tarjan是错的，反例：[[1,1,0,1,1,1],[1,1,1,1,0,1],[1,1,1,1,1,1]] (ans should be true)
+        
+        // 参考题解后的解法：走上路和下路，看两条路是否有相交点
         public bool IsPossibleToCutPath(int[][] grid)
+        {
+            int m = grid.Length, n = grid[0].Length;
+
+            // 特殊处理类似[[1]]或者[[1,1]]这样的特例
+            if (m == 1 || n == 1) return m + n > 3;
+
+            // 上路: 先右后下
+            HashSet<(int, int)> hs = new();
+            bool Dfs1(int i, int j)
+            {
+                if (i == m - 1 && j == n - 1) return true;
+                foreach ((int ni, int nj) in new (int, int)[] { (i, j + 1), (i + 1, j) })
+                    if (ni < m && nj < n && grid[ni][nj] == 1)
+                    {
+                        if (Dfs1(ni, nj))
+                        {
+                            hs.Add((i, j));
+                            return true;
+                        }
+                    }
+                return false;
+            }
+
+            if (!Dfs1(0, 1)) return true; // 如果上路走不通，那(1,0)便是割点
+
+            // 下路: 先下后右
+            bool Dfs2(int i, int j)
+            {
+                if (hs.Contains((i, j))) throw new Exception();
+                foreach ((int ni, int nj) in new (int, int)[] { (i + 1, j), (i, j + 1) })
+                    if (ni < m && nj < n && grid[ni][nj] == 1)
+                    {
+                        if (ni == m - 1 && nj == n - 1) return true;
+                        if (Dfs2(ni, nj)) return true;
+                    }
+                return false;
+            }
+
+            try
+            {
+                return !Dfs2(1, 0);
+            }
+            catch
+            {
+                return true;
+            }
+        }
+        public bool IsPossibleToCutPath_WA1(int[][] grid)
         {
             dfn = new(); low = new();
             Dfs(grid, 0, 0);
@@ -199,6 +252,16 @@ namespace ConsoleCore1.contest
 
         int RunTestD()
         {
+            // 一直错，到最后用了7个case才过
+            // [[1,1,1],[1,0,0],[1,1,1]] true
+            // [[1,1,1],[1,0,1],[1,1,1]] false
+            // [[1,1,0,1,1,1],[1,1,1,1,0,1],[1,1,1,1,1,1]] true
+            // [[1,1]] false
+            // [[1,1,1]] true
+            // [[1,1,1],[1,1,0],[1,1,1]] true
+            // [[1]] false
+
+
             //int[] a1 = { 1, 1, 1 }, a2 = { 1, 0, 1 }, a3 = { 1, 1, 1 };
             //int[][] aa = { a1, a2, a3 };
             int[] a = { 1, 1, 1, 1, 1 };

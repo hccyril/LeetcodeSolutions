@@ -137,12 +137,13 @@ namespace ConsoleCore1.contest
                 .Min();
         }
 
-        internal static void Run()
+        internal static int Run()
         {
             var sln = new LCP053();
             //int[] time = { 1, 2, 1 }, position = { 6, 3, 3 };
             int[] time = { 1, 1, 1, 2, 2, 3, 5 }, position = { 1, 2, 3, 1, 2, 1, 3 };
             Console.WriteLine(sln.DefendSpaceCity(time, position));
+            return 0;
         }
         /** ARCHIVE
          * 中间过程允许漏掉，但最后结果不允许
