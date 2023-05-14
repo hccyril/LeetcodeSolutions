@@ -90,6 +90,10 @@ namespace ConsoleCore1
     static class GraphEX
     {
         #region 图论-矩阵
+
+        // pairwise(d)即为四个方向的增量
+        internal static int[] d = { 0, -1, 0, 1, 0 };
+
         /// <summary>
         /// 矩阵枚举上下左右四个方向
         /// </summary>
