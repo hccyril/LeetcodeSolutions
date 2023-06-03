@@ -306,7 +306,65 @@ namespace ConsoleCore1
             return arr;
         }
         #endregion
+
+        #region 图论-其他
+        /// <summary>
+        /// 构建无向图（双向图）
+        /// </summary>
+        internal static StarGraph<int, int> BuildGraph(this int[][] edges, bool isUg = false)
+        {
+            StarGraph<int, int> sg = new();
+            foreach (var ed in edges)
+            {
+                int s = ed[0], t = ed[1], w = ed.Length > 2 ? ed[2] : 1;
+                sg.AddEdge(s, t, w);
+                if (isUg)
+                    sg.AddEdge(t, s, w);
+            }
+            return sg;
+        }
+        #endregion 
     }
+
+    /// <summary>
+    /// 基于链式前向星构建的图的封装类
+    /// </summary>
+    /// <typeparam name="K">支持节点类型为泛型</typeparam>
+    /// <typeparam name="V">支持边权值类型为泛型</typeparam>
+    public class StarGraph<K, V> 
+        where K: notnull
+        where V: IComparable
+    {
+        readonly Dictionary<K, LinkEdge?> head = new();
+        class LinkEdge
+        {
+            public readonly K To;
+            public readonly V W;
+            public readonly LinkEdge? Next;
+            public LinkEdge(K t, V w, LinkEdge? n)
+            {
+                To = t;
+                W = w;
+                Next = n;
+            }
+        }
+
+        public void AddEdge(K u, K v, V w)
+        {
+            head.TryAdd(u, null);
+            head[u] = new(v, w, head[u]);
+    }
+
+        public IEnumerable<K> Nexts(K u)
+            => Edges(u).Select(t => t.Item1);
+
+        public IEnumerable<(K, V)> Edges(K u)
+        {
+            for (var ed = head.ContainsKey(u) ? head[u] : null; ed != null; ed = ed.Next)
+                yield return (ed.To, ed.W);
+        }
+    }
+
     static class ReuseFunctions
     {
         /// <summary>
