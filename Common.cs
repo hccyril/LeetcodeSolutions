@@ -365,12 +365,15 @@ namespace ConsoleCore1
         }
     }
 
-    static class ReuseFunctions
+    /// <summary>
+    /// 字符串算法
+    /// </summary>
+    static class TextEX
     {
         /// <summary>
         /// KMP关键算法-next映射
         /// </summary>
-        internal static int[] Kmp(this string s)
+        public static int[] Kmp(this string s)
         {
             int[] next = new int[s.Length];
             next[0] = -1;
@@ -386,6 +389,36 @@ namespace ConsoleCore1
             return next;
         }
 
+        /// <summary>
+        /// 回文串高效算法 - Manacher(俗称马拉车): 返回每个字符对应的臂长（暂时只支持奇数长度的回文串）
+        /// </summary>
+        public static int[] Manacher(this string s)
+        {
+            int Expand(int i, int l = 1) => i - l < 0 || i + l >= s.Length || s[i - l] != s[i + l] ? l - 1 : Expand(i, l + 1);
+            int[] arms = new int[s.Length];
+            int i = 1;
+            while (i < s.Length - 1)
+            {
+                arms[i] = Expand(i, arms[i] + 1);
+                if (arms[i] == 0) ++i;
+                else
+                {
+                    for (int l = 1; l <= arms[i]; ++l)
+                    {
+                        arms[i + l] = Math.Min(arms[i - l], arms[i] - l);
+                        if (arms[i + l] + l >= arms[i])
+                        {
+                            i = i + l;
+                            break;
+                        }
+                    }
+                }
+            }
+            return arms;
+        }
+    }
+    static class ReuseFunctions
+    {
         // 单调栈
         internal static Stack<(int, int)> BuildStack(this int[] nums)
         {
@@ -1874,6 +1907,7 @@ namespace ConsoleCore1
         }
     }
     #endregion
+    
     public static partial class SolutionExtensions
     {
         const int MOD = 1000000007;
@@ -1904,6 +1938,29 @@ namespace ConsoleCore1
             long p = x;
             while (p % x != 0) p += MOD;
             return (int)(p / x);
+        }
+
+        // 返回全组合列表(C(m, n) mod 1e9+7 for All(m, n))
+        public static int[][] AllCombinations(this int n)
+        {
+            int[][] ca = new int[n + 1][];
+            for (int r = 0; r <= n; ++r)
+            {
+                ca[r] = new int[r + 1];
+                for (int c = 0; c <= r; ++c)
+                    ca[r][c] = c == 0 || c == r ? 1 : (ca[r - 1][c - 1] + ca[r - 1][c]) % MOD;
+            }
+            return ca;
+        }
+
+        // 缓存所有的阶乘
+        public static int[] AllFactorials(this int n)
+        {
+            int[] a = new int[n + 1];
+            a[0] = 1;
+            for (int m = 1; m <= n; ++m)
+                a[m] = a[m - 1].Multi(m);
+            return a;
         }
     }
 
