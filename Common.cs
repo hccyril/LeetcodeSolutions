@@ -1661,9 +1661,10 @@ namespace ConsoleCore1
     // 位数组拓展，每个元素取值1-4，占2个位
     class B4Array
     {
-        BitArray ba;
+        readonly BitArray ba;
         int map;
-        public B4Array(int n) => ba = n > 16 ? new(n << 1) : null;
+        public B4Array(int n) => ba = new(n << 1);
+            // n > 16 ? new(n << 1) : null; // avoid set null
         int Get(int bi) => ba != null ? ba[bi] ? 1 : 0 : (map & 1 << bi) != 0 ? 1 : 0;
         void Set(int bi, bool val) 
         {
@@ -1683,6 +1684,43 @@ namespace ConsoleCore1
                 Set(index << 1 | 1, (value & 1) != 0);
             }
         }
+    }
+
+    // BitSetTree - 20230620
+    // 用于快速判断某子集是否已被包含于bist中，例如存在1011，则check(1001)也为true
+    class BitSetTree
+    {
+        readonly BitArray ba;
+        public BitSetTree(int numBits) => ba = new(1 << numBits + 1);
+        public bool this[int m]
+        {
+            get => m == 0 ? ba[0] : CheckBits(m);
+            set
+            {
+                if (m == 0) ba[0] = value;
+                else if (value) SetBits(m);
+                else UnsetBits(m);
+            }
+        }
+
+        bool CheckBits(int m, int i = 1) =>
+            ba[i] &&
+            (m == 1 ? ba[i << 1 | 1] :
+            (m & 1) != 0 ? CheckBits(m >> 1, i << 1 | 1) :
+            CheckBits(m >> 1, i << 1) || CheckBits(m >> 1, i << 1 | 1));
+
+        void SetBits(int m, int i = 1)
+        {
+            ba[i] = true;
+            if (m == 1)
+                ba[i << 1 | 1] = true;
+            else if ((m & 1) != 0)
+                SetBits(m >> 1, i << 1 | 1);
+            else
+                SetBits(m >> 1, i << 1);
+        }
+
+        void UnsetBits(int m) { } // TODO
     }
 
     static class Common
