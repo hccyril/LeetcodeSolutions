@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -2027,6 +2028,15 @@ public static partial class SolutionExtensions
         long p = x;
         while (p % x != 0) p += MOD;
         return (int)(p / x);
+    }
+
+    // a ** b % MOD
+    public static int Pow(this int x, int b)
+    {
+        if (MOD == 1 || x % MOD == 0 && b != 0) return 0;
+        long a = x % MOD, r = 1L;
+        for (; b > 0; r = (b & 1) != 0 ? r * a % MOD : r, a = a * a % MOD, b >>= 1) ;
+        return (int)r;
     }
 
     // 返回全组合列表(C(m, n) mod 1e9+7 for All(m, n))
