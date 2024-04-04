@@ -142,6 +142,61 @@ static class MathEX
         for (a %= m, r = 1L; b > 0; r = (b & 1) != 0 ? r * a % m : r, a = a * a % m, b >>= 1) ;
         return (int)(r % m);
     }
+
+    #region 排列组合
+    // len(a) ^ n
+    internal static IEnumerable<IList<T>> Prod<T>(this IList<T> a, int n)
+    {
+        T[] ans = new T[n];
+        int i = 0, j = 0;
+        Stack<int> stk = new();
+        while (j < a.Count || i > 0)
+        {
+            if (i == n)
+            {
+                yield return ans;
+                j = a.Count;
+            }
+            if (j == a.Count)
+            {
+                j = stk.Pop() + 1;
+                --i;
+            }
+            else
+            {
+                ans[i] = a[j];
+                stk.Push(j);
+                ++i;
+                j = 0;
+            }
+        }
+    }
+
+    // len(a) ^ n general ver (a -> 0..m - 1)
+    internal static IEnumerable<int[]> Prod(this int m, int n)
+    {
+        int[] ans = new int[n];
+        int i = 0, j = 0;
+        while (j < m || i > 0)
+        {
+            if (i == n)
+            {
+                yield return ans;
+                j = m;
+            }
+            if (j == m)
+            {
+                j = ans[--i] + 1;
+            }
+            else
+            {
+                ans[i++] = j;
+                j = 0;
+            }
+        }
+    }
+
+    #endregion 排列组合
 }
 
 /// <summary>
@@ -152,7 +207,7 @@ static class GraphEX
     #region 图论-矩阵
 
     // pairwise(d)即为四个方向的增量
-    //internal static int[] d = { 0, -1, 0, 1, 0 };
+    internal static int[] d = { 0, -1, 0, 1, 0 };
 
     /// <summary>
     /// 矩阵枚举上下左右四个方向
@@ -686,13 +741,13 @@ public class ListNode
 public class TreeNode
 {
     public virtual int val { get; set; }
-    public virtual TreeNode left { get; set; }
-    public virtual TreeNode right { get; set; }
+    public virtual TreeNode? left { get; set; }
+    public virtual TreeNode? right { get; set; }
     public TreeNode(int x)
     {
         val = x;
     }
-    public TreeNode(int val = 0, TreeNode left = null, TreeNode right = null)
+    public TreeNode(int val = 0, TreeNode? left = null, TreeNode? right = null)
     {
         this.val = val;
         this.left = left;
@@ -702,20 +757,23 @@ public class TreeNode
     {
         return $"{val} (L:{left} R:{right})";
     }
+}
 
+static class TreeEX
+{
     /// <summary>
-    /// 树的中序遍历
+    /// 中序遍历（非递归）
     /// </summary>
-    static IEnumerable<int> InorderTraversal(TreeNode root)
+    public static IEnumerable<TreeNode> MidOrder(TreeNode root)
     {
         Stack<TreeNode> stk = new();
-        TreeNode cur = root;
+        TreeNode? cur = root;
         while (cur != null || stk.Any())
         {
             if (cur == null)
             {
                 cur = stk.Pop();
-                yield return cur.val;
+                yield return cur;
                 cur = cur.right;
             }
             else
