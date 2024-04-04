@@ -18,7 +18,6 @@ internal class P2949统计美丽子字符串II
     {
         long ans = 0L;
         int p = 2;
-        var a = k.GetFactors();
         foreach (var g in k.GetFactors().GroupBy(t => t))
         {
             int c = g.Count() + 1 >> 1;

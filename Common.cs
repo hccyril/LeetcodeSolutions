@@ -1,13 +1,11 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ConsoleCore1;
 
@@ -37,13 +35,18 @@ static class MathEX
     internal static int Gcd(int a, int b) => b != 0 ? Gcd(b, a % b) : a;
 
     // factor[n] 表示 n的最大因子，所以 n 是质数 iff factor[n] == n
+    // 注意，factor[1]设为0
     static int[] factor = Array.Empty<int>();
 
-    internal static int[] FactorTable(int n)
+    /// <summary>
+    /// 初始化因子表
+    /// </summary>
+    internal static int[] FactorTable(this int n)
     {
+        if (factor.Length > n) return factor;
         factor = new int[n + 1];
         int i, j;
-        for (i = 1; i <= n; factor[i] = i, i += 2) ;
+        for (i = 3; i <= n; factor[i] = i, i += 2) ;
         for (i = 2; i <= n; factor[i] = 2, i += 2) ;
         for (i = 2; i <= n >> 1; i++)
         {
@@ -53,14 +56,33 @@ static class MathEX
         return factor;
     }
 
-    internal static bool IsPrime(int n)
+    internal static bool IsPrime(this int n)
     {
         if (factor == null || factor.Length <= n) FactorTable(n);
         return factor[n] == n;
     }
 
     /// <summary>
-    /// 分解质因数
+    /// 分解质因数 - 从大到小枚举返回(factor, count)
+    /// </summary>
+    internal static IEnumerable<(int, int)> EnumFactors(this int n)
+    {
+        FactorTable(n);
+        while (n > 1)
+        {
+            int f = factor[n], c = 1;
+            n /= f;
+            while (n % f == 0)
+            {
+                n /= f;
+                ++c;
+            }
+            yield return (f, c);
+        }
+    }
+
+    /// <summary>
+    /// 分解质因数（返回List，从小到大）
     /// </summary>
     internal static IList<int> GetFactors(this int n)
     {
@@ -113,9 +135,9 @@ static class MathEX
 
     // ### 阶乘求余 Power Mod
     // Returns a^b (mod c). Assume c>0 and 0^0=1.
-    internal static int PowerMod(long a, int b, int m)
+    internal static int PowerMod(this int x, int b, int m)
     {
-        long r;
+        long r, a = x;
         if (m == 1 || a % m == 0 && b != 0) return 0;
         for (a %= m, r = 1L; b > 0; r = (b & 1) != 0 ? r * a % m : r, a = a * a % m, b >>= 1) ;
         return (int)(r % m);
@@ -130,7 +152,7 @@ static class GraphEX
     #region 图论-矩阵
 
     // pairwise(d)即为四个方向的增量
-    internal static int[] d = { 0, -1, 0, 1, 0 };
+    //internal static int[] d = { 0, -1, 0, 1, 0 };
 
     /// <summary>
     /// 矩阵枚举上下左右四个方向
@@ -188,7 +210,49 @@ static class GraphEX
             }
         }
     }
-    #endregion 
+
+    // 当前格子是否位于外围边界上
+    internal static bool IsEdge(this int[][] mx, int i, int j)
+        => i == 0 || i == mx.Length - 1 || j == 0 || j == mx[0].Length - 1;
+
+    /// <summary>
+    /// 查找连续区域，并涂成目标颜色（非递归实现回溯）
+    /// </summary>
+    /// <returns>区域块个数</returns>
+    // 测试：LC 695 or [LCR 105. 岛屿的最大面积](https://leetcode.cn/problems/ZL6zAn/)
+    internal static int DfsFill(this int[][] mx, int i, int j, int color)
+    {
+#if DEBUG
+        Debug.Assert(mx != null && mx.Length > 0 && mx[0] != null && mx[0].Length > 0 && i >= 0 && i < mx.Length && j >= 0 && j < mx[0].Length && mx[i][j] != color);
+#endif
+        int[] d = { 0, -1, 0, 1, 0 };
+        Stack<(int, int, int)> stk = new();
+        int orgColor = mx[i][j], nc = 1, x = i, y = j, z = 1;
+        mx[i][j] = color;
+        while (z < 5 || stk.Any())
+        {
+            if (z == 5)
+            {
+                (x, y, z) = stk.Pop();
+                continue;
+            }
+            int nextX = x + d[z - 1], nextY = y + d[z];
+            if (nextX >= 0 && nextX < mx.Length && nextY >= 0 && nextY < mx[0].Length)
+            {
+                if (mx[nextX][nextY] == orgColor)
+                {
+                    ++nc;
+                    mx[nextX][nextY] = color;
+                    stk.Push((x, y, z + 1));
+                    (x, y, z) = (nextX, nextY, 1);
+                    continue;
+                }
+            }
+            ++z;
+        }
+        return nc;
+    }
+    #endregion 图论-矩阵
 		
     #region 图论-最短路径
     /// <summary>
@@ -196,11 +260,23 @@ static class GraphEX
     /// </summary>
     internal static int Dist(this (int x, int y) p1, (int x, int y) p2)
         => Math.Abs(p1.x - p2.x) + Math.Abs(p1.y - p2.y);
+    /// <summary>
+    /// 枚举所有边，支持去重
+    /// </summary>
     internal static IEnumerable<(int, int, int)> EnumLengthEdges(this int[][] edges, bool isReverse = false)
-        => isReverse ?
+    { 
+        var el = isReverse ?
         edges.OrderBy(t => t[1]).ThenBy(t => t[0]).ThenBy(t => t[2]).Select(ed => (ed[1], ed[0], ed[2])) :
         edges.OrderBy(t => t[0]).ThenBy(t => t[1]).ThenBy(t => t[2]).Select(ed => (ed[0], ed[1], ed[2]));
-    
+        int s0 = -1, t0 = -1;
+        foreach ((int s, int t, int l) in el)
+        {
+            if (s == s0 && t == t0) continue;
+            else yield return (s, t, l);
+            (s0, t0) = (s, t);
+        }
+    }
+
     /// <summary>
     /// 有向图，无边长
     /// </summary>
@@ -222,14 +298,11 @@ static class GraphEX
     internal static Dictionary<int, List<(int, int)>> DirectedGraphWithLength(this int[][] edges, bool isReverse = false)
     {
         Dictionary<int, List<(int, int)>> dg = new();
-        int s0 = -1, t0 = -1;
         foreach ((int sr, int dt, int le) in edges.EnumLengthEdges(isReverse))
-        {
-            if (sr == s0 && dt == t0) continue;
-            if (sr != s0) dg[sr] = new();
-            dg[sr].Add((dt, le));
-            s0 = sr; t0 = dt;
-        }
+            if (dg.TryGetValue(sr, out var li))
+                li.Add((dt, le));
+            else
+                dg[sr] = new() { (dt, le) };
         return dg;
     }
 
@@ -277,6 +350,54 @@ static class GraphEX
             }
         }
         return ug;
+    }
+
+    /// <summary>
+    /// 无向树形图，节点编号0到n-1，边权数为n-1
+    /// </summary>
+    internal static List<int>[] TreeGraph(this int[][] edges, int n = 0)
+    {
+        if (n == 0) n = edges.Length + 1;
+        var tg = Enumerable.Range(0, n).Select(_ => new List<int>()).ToArray();
+        foreach (var ed in edges)
+        {
+            tg[ed[0]].Add(ed[1]);
+            tg[ed[1]].Add(ed[0]);
+        }
+        return tg;
+    }
+
+    /// <summary>
+    /// 无向树的DFS（非递归模板）
+    /// </summary>
+    internal static void TreeDfs(this IList<int>[] tg)
+    {
+        Stack<(int, int)> dfsStack = new();
+        int nodeIndex = 0, childIndex = 0;
+        while (true)
+        {
+            if (childIndex == 0)
+            {
+                Debug.WriteLine("PreOrder In");
+            }
+
+            // skip parent
+            if (childIndex < tg[nodeIndex].Count && dfsStack.Any() && dfsStack.Peek().Item1 == tg[nodeIndex][childIndex]) ++childIndex;
+
+            // recursion
+            if (childIndex == tg[nodeIndex].Count)
+            {
+                Debug.WriteLine("PostOrder Out");
+
+                if (dfsStack.Any()) (nodeIndex, childIndex) = dfsStack.Pop();
+                else break;
+            }
+            else
+            {
+                dfsStack.Push((nodeIndex, childIndex + 1));
+                (nodeIndex, childIndex) = (tg[nodeIndex][childIndex], 0);
+            }
+        }
     }
 
     internal static long Dijkstra(this int[][] edges, int src, int dest, bool isDirectGraph = true)
@@ -430,6 +551,7 @@ static class TextEX
     /// <summary>
     /// 回文串高效算法 - Manacher(俗称马拉车): 返回每个字符对应的臂长（暂时只支持奇数长度的回文串）
     /// </summary>
+    // 用法参见 P1960两个回文子字符串长度的最大乘积
     public static int[] Manacher(this string s)
     {
         int Expand(int i, int l = 1) => i - l < 0 || i + l >= s.Length || s[i - l] != s[i + l] ? l - 1 : Expand(i, l + 1);
@@ -579,6 +701,29 @@ public class TreeNode
     public override string ToString()
     {
         return $"{val} (L:{left} R:{right})";
+    }
+
+    /// <summary>
+    /// 树的中序遍历
+    /// </summary>
+    static IEnumerable<int> InorderTraversal(TreeNode root)
+    {
+        Stack<TreeNode> stk = new();
+        TreeNode cur = root;
+        while (cur != null || stk.Any())
+        {
+            if (cur == null)
+            {
+                cur = stk.Pop();
+                yield return cur.val;
+                cur = cur.right;
+            }
+            else
+            {
+                stk.Push(cur);
+                cur = cur.left;
+            }
+        }
     }
 }
 
@@ -910,6 +1055,7 @@ class UnionFind
     public UnionFind(int n) => parent = Enumerable.Range(0, n).ToArray();
     public bool Check(int index1, int index2) => Find(index1) == Find(index2);
     public void Union(int index1, int index2) => parent[Find(index2)] = Find(index1);
+    public int this[int index] => Find(index);
     public int Find(int index) => parent[index] != index ? (parent[index] = Find(parent[index])) : parent[index];
     public int GroupCount() => Enumerable.Range(0, parent.Length).Select(i => Find(i)).Distinct().Count();
 }
@@ -1454,7 +1600,7 @@ public class TreeSet<E>
         }
     }
 
-    Func<E, E, int> comp;
+    readonly Func<E, E, int> comp;
     int Compare(E a, E b)
         => comp != null ? comp(a, b) : (a as IComparable<E>).CompareTo(b);
     public TreeSet(Func<E, E, int> cmp = null) => comp = cmp;
@@ -1618,6 +1764,27 @@ class PreSum
 }
 
 /// <summary>
+/// 离散化
+/// </summary>
+class DiscreteNums<T> where T : IComparable
+{
+    readonly Dictionary<T, int> mp;
+    readonly IList<T> orgValues;
+    public DiscreteNums(IList<T> a)
+    {
+        orgValues = a;
+        SortedSet<T> ss = new();
+        foreach (var t in a) ss.Add(t);
+        mp = new();
+        int i = 0;
+        foreach (var t in ss) mp[t] = i++;
+    }
+    public int Count => orgValues.Count;
+    public int this[int index] => mp[orgValues[index]];
+    public IEnumerable<int> EnumValues() => orgValues.Select(t => mp[t]);
+}
+
+/// <summary>
 /// 树状数组Fenwick Tree
 /// </summary>
 class Fenwick
@@ -1631,7 +1798,7 @@ class Fenwick
     public int Sum(int i)
     {
         int sum = 0;
-        for (++i; i > 0; sum += arr[i], i -= i & -i);
+        for (++i; i > 0; sum += arr[i], i &= i - 1); // i -= i & -i);
         return sum;
     }
     public int Get(int i)
@@ -1640,6 +1807,46 @@ class Fenwick
         for (int next = i - 1, end = i - (i & -i); next > end; sum -= arr[next], next -= next & -next) ;
         return sum;
     }
+}
+
+/// <summary>
+/// 线段树（位运算用）：每个节点只有0或1，支持区间翻转，以及统计区间内1的个数
+/// </summary>
+/// <remarks>
+/// 操作：Flip - 将区间内所有的01翻转，并返回更新之后的Count
+///       Update - 单点操作
+/// </remarks>
+class BitSegmentTree
+{
+    readonly int N;
+    readonly (int, int)[] a;
+    public int Count => a[0].Item2;
+    public BitSegmentTree(int n)
+    {
+        N = n;
+        a = new (int, int)[N << 2];
+    }
+
+    public int Flip(int l, int r, int i = 0, int start = 0, int end = -1)
+    {
+        if (end == -1) end = N - 1;
+        if (l == start && r == end)
+        {
+            (int b, int c) = a[i];
+            b ^= 1;
+            c = r - l + 1 - c;
+            a[i] = (b, c);
+            return c;
+        }
+        int m = start + end >> 1, lc = a[i << 1 | 1].Item2, rc = a[i + 1 << 1].Item2;
+        if (l <= m) lc = Flip(l, Math.Min(r, m), i << 1 | 1, start, m);
+        if (r > m) rc = Flip(Math.Max(m + 1, l), r, i + 1 << 1, m + 1, end);
+        int t = lc + rc; if (a[i].Item1 == 1) t = end - start + 1 - t;
+        a[i] = (a[i].Item1, t);
+        return a[i].Item2;
+    }
+
+    public void Update(int i) => Flip(i, i);
 }
 
 class ModInt
@@ -1777,7 +1984,7 @@ class BitSetTree
 
 static class Common
 {
-
+    #region 计算几何
     class Point
     {
         public int x;
@@ -1797,6 +2004,139 @@ static class Common
         int x1 = p1[0] - p0[0], y1 = p1[1] - p0[1];
         int x2 = p2[0] - p0[0], y2 = p2[1] - p0[1];
         return x1 * y2 - x2 * y1;
+    }
+    #endregion
+
+    #region 二分查找
+
+    /// <summary>
+    /// 查找排列序列中数值范围在[lo,hi]的区间
+    /// </summary>
+    internal static (int l, int r) BinaryRangeSearch<T>(this IList<T> list, T lo, T hi) where T: IComparable<T>
+    {
+        if (lo.CompareTo(hi) > 0 || list?.Any() != true || hi.CompareTo(list.First()) < 0 || lo.CompareTo(list.Last()) > 0)
+            return (0, -1);
+            
+        int l1 = 0, r1 = list.Count - 1, l2 = 0, r2 = list.Count - 1;
+        // lower bound, meanwhile restrict upper bound
+        while (l1 < r1)
+        {
+            int mid = l1 + (r1 - l1 >> 1);
+            if (list[mid].CompareTo(lo) < 0)
+            {
+                l1 = mid + 1;
+            }
+            else
+            {
+                r1 = mid;
+                if (list[mid].CompareTo(hi) > 0)
+                {
+                    r2 = mid - 1;
+                }
+                else
+                {
+                    l2 = mid;
+                }
+            }
+        }
+        if (l1 - 1 > l2) l2 = l1 - 1;
+
+        // upperbound
+        while (l2 < r2)
+        {
+            int mid = l2 + (r2 - l2 + 1 >> 1);
+            if (list[mid].CompareTo(hi) > 0)
+            {
+                r2 = mid - 1;
+            }
+            else
+            {
+                l2 = mid;
+            }
+        }
+
+        return (l1, r2);
+
+    }
+
+    internal static int RangeCount(this (int l, int r) range) => range.r - range.l + 1;
+
+    #endregion
+
+    /// <summary>
+    /// 调试用，位运算状态解压缩并输出所有位，例如 5 => { 0 2 }
+    /// </summary>
+    public static string ShowBits(this int m)
+    {
+        StringBuilder bu = new();
+        bu.Append('{');
+        for (int i = 0; i < 31; ++i)
+            if ((1 << i & m) != 0)
+                bu.Append(' ').Append(i);
+        bu.Append(" }");
+        return bu.ToString();
+    }
+
+    /// <summary>
+    /// 从小到大枚举非负数序列的子序列和
+    /// </summary>
+    // 例题：P2386
+    public static IEnumerable<long> OrderedSum(this IEnumerable<int> nums)
+    {
+        yield return 0L;
+
+        var it = nums.GetEnumerator();
+        List<int> a = new();
+        PriorityQueue<(long, int, int), long> pq = new();
+        if (it.MoveNext())
+        {
+            a.Add(it.Current);
+            pq.Enqueue((a[0], 0, int.MaxValue), a[0]);
+        }
+        while (pq.Count > 0)
+        {
+            (long sm, int i, int limit) = pq.Dequeue();
+            yield return sm;
+            if (i + 1 == a.Count)
+            {
+                if (it.MoveNext()) a.Add(it.Current);
+                else limit = i;
+            }
+            if (i + 1 <= limit)
+            {
+                long nxs = sm - a[i] + a[i + 1];
+                pq.Enqueue((nxs, i + 1, limit), nxs);
+            }
+            if (i > 0) {
+                long nxs = sm + a[0];
+                pq.Enqueue((nxs, 0, i - 1), nxs);
+            }
+        }
+    }
+
+    // OrderedSum (数组确定版本）
+    public static IEnumerable<long> OrderedSumOfList(this IList<int> a)
+    {
+        yield return 0L;
+        if (!a.Any()) yield break;
+
+        PriorityQueue<(long, int, int), long> pq = new();
+        pq.Enqueue((a[0], 0, a.Count - 1), a[0]);
+        while (pq.Count > 0)
+        {
+            (long sm, int i, int limit) = pq.Dequeue();
+            yield return sm;
+            if (i + 1 <= limit)
+            {
+                long nxs = sm - a[i] + a[i + 1];
+                pq.Enqueue((nxs, i + 1, limit), nxs);
+            }
+            if (i > 0)
+            {
+                long nxs = sm + a[0];
+                pq.Enqueue((nxs, 0, i - 1), nxs);
+            }
+        }
     }
 
     public static (int x, int y) UnPair(int[] pair) => (pair[0], pair[1]);
@@ -2067,3 +2407,138 @@ public static partial class SolutionExtensions
  * 例如 3 / 2 = 500000005 （= (3 + 1000000007) / 2)
  * 除法貌似只能暴力解
  */
+
+/// <summary>
+/// 常用排序算法
+/// </summary>
+static class SortEX
+{
+    // 冒泡排序
+    internal static void BubbleSort<T>(this IList<T> a) where T : IComparable<T>
+    {
+        int bound, exchange = a.Count - 1;
+        while (exchange != 0)
+        {
+            bound = exchange;
+            exchange = 0;
+            for (int i = 0; i < bound; i++)
+                if (a[i].CompareTo(a[i + 1]) > 0)
+                {
+                    (a[i], a[i + 1]) = (a[i + 1], a[i]);
+                    exchange = i;
+                }
+        }
+    }
+
+    // 选择排序
+    internal static void SelectSort<T>(this IList<T> a) where T : IComparable<T>
+    {
+        for (int i = 0; i < a.Count - 1; i++)
+        {
+            int index = i;
+            for (int j = i + 1; j < a.Count; j++)
+                if (a[j].CompareTo(a[index]) < 0)
+                    index = j;
+            if (index != i)
+                (a[i], a[index]) = (a[index], a[i]); //swap(a, i, index);
+        }
+    }
+
+    // 插入排序
+    internal static void InsertSort<T>(this IList<T> a) where T : IComparable<T>
+    {
+        for (int i = 1; i < a.Count; i++)
+        {// 从第 2 个记录开始执行
+            T t = a[i];                     // 将待插入元素暂存于变量 t 
+            int j = i - 1;		
+            for (; j >= 0 && t.CompareTo(a[j]) < 0; --j) // 搜索插入位置，注意不要越界
+                a[j + 1] = a[j];			// 记录后移
+            a[j + 1] = t;					// 完成 t 的插入操作
+        }
+    }
+
+    // 归并排序
+    internal static IList<T> MergeSort<T>(this IList<T> a, int left = 0, int right = -1) where T : IComparable<T>
+    {
+        if (right == -1) right = a.Count - 1;
+
+        // 边界条件：没有元素或 1 个元素直接返回
+        if (left > right) return Array.Empty<T>();
+        if (left == right) return new T[] { a[left] };
+
+        // 划分并求解子问题
+        int mid = left + (right - left) / 2;
+        IList<T> a1 = MergeSort(a, left, mid);
+        IList<T> a2 = MergeSort(a, mid + 1, right);
+
+        // 合并
+        T[] c = new T[a1.Count + a2.Count];
+        int i1 = 0, i2 = 0;
+        while (i1 < a1.Count && i2 < a2.Count)
+        {
+            if (a1[i1].CompareTo(a2[i2]) <= 0)
+            {
+                c[i1 + i2] = a1[i1];
+                ++i1;
+            }
+            else
+            {
+                c[i1 + i2] = a2[i2];
+                ++i2;
+            }
+        }
+
+        // 不要忘记对子数组的剩余部分进行合并
+
+        while (i1 < a1.Count)
+        {
+            c[i1 + i2] = a1[i1];
+            ++i1;
+        }
+
+        while (i2 < a2.Count)
+        {
+            c[i1 + i2] = a2[i2];
+            ++i2;
+        }
+
+        return c;
+    }
+
+    // （快速排序核心算法）对 a[p..r] 进行划分操作
+    static int Partition<T>(IList<T> a, int p, int r) where T : IComparable<T>
+    {
+        T pivot = a[p];   // 选定轴值
+        int i = p, j = r;   // 初始化左右指针
+        while (i < j)
+        {
+            while (i < j && pivot.CompareTo(a[j]) <= 0)
+                j--;
+            if (i < j)
+            {
+                (a[i], a[j]) = (a[j], a[i]); // swap(a, i, j);
+                i++;
+            }
+            while (i < j && pivot.CompareTo(a[i]) >= 0)
+                i++;
+            if (i < j)
+            {
+                (a[i], a[j]) = (a[j], a[i]); // swap(a, i, j);
+                j--;
+            }
+        }
+        return i;
+    }
+
+    // 快速排序
+    internal static void QuickSort<T>(this IList<T> a, int p = 0, int r = -1) where T: IComparable<T>
+    {
+        if (r == -1) r = a.Count - 1;
+        if (p < r)
+        {
+            int q = Partition(a, p, r); // 划分，并返回轴值在数组中的位置
+            QuickSort(a, p, q - 1);     // 递归求解左子数组
+            QuickSort(a, q + 1, r);     // 递归求解右子数组
+        }
+    }
+}
