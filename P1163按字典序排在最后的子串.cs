@@ -12,7 +12,7 @@ namespace ConsoleCore1
     {
         public string LastSubstring(string s)
         {
-            var next = s.Kmp();
+            var next = s.KmpBuildNext();
             int i = 0, j = -1;
             for (int k = 1; k < s.Length; ++k)
             {

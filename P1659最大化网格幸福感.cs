@@ -11,6 +11,60 @@ namespace ConsoleCore1;
 // dp[i,map,in,out]四维dp，map为第i行的房间安排状况，最大为3^5
 internal class P1659最大化网格幸福感
 {
+    // ver3 - 轮廓线DP (2024.4.13)
+    // AC (289ms)
+    public int GetMaxGridHappiness(int m, int n, int ic, int ec)
+    {
+        int mn = 1 << (n << 1), fm = mn - 1;
+        Dictionary<(int, int, int), int> dp0 = new(), dp1 = new();
+        dp0[(0, 0, 0)] = 0;
+
+        // moved to Common
+        //bool Update(Dictionary<(int, int, int), int> dp, int b, int ip, int ep, int val)
+        //    => (!dp.TryGetValue((b, ip, ep), out var v0) || val > v0) && (dp[(b, ip, ep)] = val) >= 0;
+        int Neighbor(int me, int you) => you switch
+        {
+            1 => me == 2 ? -10 : 40,
+            2 => me == 2 ? -60 : -10,
+            _ => 0 
+        };
+
+        for (int i = 0; i < m; ++i)
+            for (int j = 0; j < n; ++j)
+            {
+                dp1.Clear();
+                foreach (((int b, int ip, int ep), int val) in dp0)
+                {
+                    // #1 不住人
+                    int b1 = b << 2 & fm;
+                    dp1.UpdateBigger((b << 2 & fm, ip, ep), val); 
+                    //Update(dp1, b << 2 & fm, ip, ep, val);
+
+                    // #2 i人(10b=2)
+                    if (ip < ic)
+                    {
+                        int v1 = 120;
+                        if (i > 0) v1 += Neighbor(2, b >> (n - 1 << 1) & 3);
+                        if (j > 0) v1 += Neighbor(2, b & 3);
+                        dp1.UpdateBigger((b << 2 & fm | 2, ip + 1, ep), val + v1);
+                        //Update(dp1, b << 2 & fm | 2, ip + 1, ep, val + v1);
+                    }
+
+                    // #3 e人(01)
+                    if (ep < ec)
+                    {
+                        int v1 = 40;
+                        if (i > 0) v1 += Neighbor(1, b >> (n - 1 << 1) & 3);
+                        if (j > 0) v1 += Neighbor(1, b & 3);
+                        dp1.UpdateBigger((b << 2 & fm | 1, ip, ep + 1), val + v1);
+                        //Update(dp1, b << 2 & fm | 1, ip, ep + 1, val + v1);
+                    }
+                }
+                (dp0, dp1) = (dp1, dp0);
+            }
+        return dp0.Values.Max();
+    }
+
     // 状态压缩&解压缩
     static int Pack(IList<int> a, int i, int e, int r = 0) => Enumerable.Range(0, a.Count).Select(t => a[t] << (t << 1)).Sum() | i << 16 | e << 20 | r << 24;
     static (int[] a, int i, int e, int r) Unpack(int p, int n)
@@ -104,7 +158,7 @@ internal class P1659最大化网格幸福感
 
     // ver2 - 看完官方题解后发现思路基本一样，但官解用记忆化回溯，尝试自己写
     // 基本跟官方题解完全一样了，本地执行也不慢，但提交上去就超时，想不明白
-    public int GetMaxGridHappiness(int m, int n, int ic, int ec)
+    public int GetMaxGridHappiness_DP2(int m, int n, int ic, int ec)
     {
         Dictionary<(int, int, int, int), int> di = new();
 

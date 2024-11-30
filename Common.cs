@@ -200,6 +200,27 @@ static class MathEX
 }
 
 /// <summary>
+/// 位运算模板
+/// </summary>
+static class BitOperationsEX
+{
+    /// <summary>
+    /// 统计二进制中1的个数
+    /// </summary>
+    internal static int CountOne(this int n) => n == 0 ? 0 : n == -2147483648 ? 1 : 1 + CountOne(n & (n - 1));
+
+    /// <summary>
+    /// 统计0到n中对应i位出现1的个数
+    /// </summary>
+    internal static long CountAllBit(this long n, int i)
+    {
+        int j = i + 1;
+        long d = n >> j, m = n & (1L << j) - 1;
+        return (d << i) + Math.Max(0L, m - (1L << i));
+    }
+}
+
+/// <summary>
 /// 图论库
 /// </summary>
 static class GraphEX
@@ -308,7 +329,214 @@ static class GraphEX
         return nc;
     }
     #endregion 图论-矩阵
-		
+
+    #region 图论-树/二叉树
+	/// <summary>
+    /// 前序遍历（非递归）
+    /// </summary>
+	public static IEnumerable<TreeNode> PreOrder(this TreeNode root)
+	{
+		Stack<TreeNode> stk = new();
+		TreeNode? cur = root;
+		while (cur != null || stk.Any())
+        {
+            if (cur == null)
+            {
+                cur = stk.Pop();
+            }
+            else
+            {
+				yield return cur;
+				if (cur.right != null)
+					stk.Push(cur.right);
+                cur = cur.left;
+            }
+        }
+    }
+	
+	
+    /// <summary>
+    /// 中序遍历（非递归）
+    /// </summary>
+    public static IEnumerable<TreeNode> MidOrder(this TreeNode root)
+    {
+        Stack<TreeNode> stk = new();
+        var cur = root;
+        while (cur != null || stk.Any())
+        {
+            if (cur == null)
+            {
+                cur = stk.Pop();
+                yield return cur;
+                cur = cur.right;
+            }
+            else
+            {
+                stk.Push(cur);
+                cur = cur.left;
+            }
+        }
+    }
+	
+    /// <summary>
+    /// 后序遍历（非递归）
+    /// </summary>	
+	public static IEnumerable<TreeNode> PostOrder(this TreeNode root)
+	{
+		// TODO 
+		Stack<TreeNode> stk = new();
+		TreeNode? cur = root;
+		while (cur != null || stk.Any())
+        {
+            if (cur == null)
+            {
+                cur = stk.Pop();
+            }
+            else
+            {
+				yield return cur;
+				if (cur.right != null)
+					stk.Push(cur.right);
+                cur = cur.left;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 无向树形图，节点编号0到n-1，边权数为n-1
+    /// (带边权的请用WeightedTreeGraph）
+    /// </summary>
+    /// <param name="n">如果节点编号从1开始请传入n+1</param>
+    /// <returns></returns>
+    internal static List<int>[] TreeGraph(this int[][] edges, int n = 0)
+    {
+        if (n == 0) n = edges.Length + 1;
+        var tg = Enumerable.Range(0, n).Select(_ => new List<int>()).ToArray();
+        foreach (var ed in edges)
+        {
+            tg[ed[0]].Add(ed[1]);
+            tg[ed[1]].Add(ed[0]);
+        }
+        return tg;
+    }
+
+    // 有边权的无向树
+    internal static List<(int, int)>[] WeightedTreeGraph(this int[][] edges, int n = 0)
+    {
+        if (n == 0) n = edges.Length + 1;
+        var tg = Enumerable.Range(0, n).Select(_ => new List<(int, int)>()).ToArray();
+        foreach (var ed in edges)
+        {
+            tg[ed[0]].Add((ed[1], ed[2]));
+            tg[ed[1]].Add((ed[0], ed[2]));
+        }
+        return tg;
+    }
+
+    /// <summary>
+    /// 无向树的DFS（非递归模板）
+    /// </summary>
+    internal static void TreeDfs(this IList<int>[] tg)
+    {
+        Stack<(int, int)> dfsStack = new();
+        int nodeIndex = 0, childIndex = 0;
+        while (true)
+        {
+            if (childIndex == 0)
+            {
+                Debug.WriteLine("PreOrder In. current Node = " + nodeIndex + ", depth = " + dfsStack.Count);
+            }
+
+            // skip parent
+            if (childIndex < tg[nodeIndex].Count && dfsStack.Any() && dfsStack.Peek().Item1 == tg[nodeIndex][childIndex]) ++childIndex;
+
+            // recursion
+            if (childIndex == tg[nodeIndex].Count)
+            {
+                Debug.WriteLine("PostOrder Out. current Node = " + nodeIndex);
+
+                if (dfsStack.Any()) (nodeIndex, childIndex) = dfsStack.Pop();
+                else break;
+            }
+            else
+            {
+                dfsStack.Push((nodeIndex, childIndex + 1));
+                (nodeIndex, childIndex) = (tg[nodeIndex][childIndex], 0);
+            }
+        }
+    }
+
+    // 树形图递归（模板2）
+    internal static void TreeDfs2(this IList<int>[] tg)
+    {
+        const int DFS_ROOT = 0;
+        Stack<(int Node, int Child)> dfsStk = new();
+        int i = DFS_ROOT, childIndex = 0;
+        while (true)
+        {
+            if (childIndex == tg[i].Count)
+            {
+                int parent = dfsStk.Any() ? dfsStk.Peek().Node : -1;
+                Debug.WriteLine("dfs out. currentIndex = s, parent = " + parent);
+
+                if (dfsStk.Any())
+                {
+                    (i, childIndex) = dfsStk.Pop();
+                    continue;
+                }
+                else break;
+            }
+            else if (childIndex == 0)
+            {
+                Debug.WriteLine("dfs in");
+            }
+
+            int nextIndex = tg[i][childIndex];
+
+            if (dfsStk.Any() && dfsStk.Peek().Node == nextIndex)
+            {
+                ++childIndex;
+                continue;
+            }
+            else
+            {   // dfs next
+                dfsStk.Push((i, childIndex + 1));
+                (i, childIndex) = (nextIndex, 0);
+            }
+        }
+    }
+
+    // DEF: The diameter of a tree is the length of the longest path between any two nodes in the tree.
+    internal static int TreeDiameter(this List<int>[] tg)
+    {
+        int n = tg.Length, dm = 1, dmi = 0;
+        Span<int> a = stackalloc int[n];
+        Queue<int> qu = new();
+        for (int r = 0; r < 2; ++r)
+        {
+            if (r > 0) a.Clear();
+            a[dmi] = 1;
+            qu.Enqueue(dmi);
+            while (qu.Any())
+            {
+                int i = qu.Dequeue();
+                foreach (int j in tg[i])
+                    if (a[j] == 0)
+                    {
+                        a[j] = a[i] + 1;
+                        if (a[j] > dm)
+                        {
+                            dm = a[j];
+                            dmi = j;
+                        }
+                        qu.Enqueue(j);
+                    }
+            }
+        }
+        return dm - 1;
+    }
+    #endregion
+
     #region 图论-最短路径
     /// <summary>
     /// 曼哈顿距离：d = |x1 - x2| + |y1 - y2|
@@ -335,13 +563,13 @@ static class GraphEX
     /// <summary>
     /// 有向图，无边长
     /// </summary>
-    internal static Dictionary<int, List<int>> DirectedGraphNoLength(this int[][] edges)
+    internal static IDictionary<int, IList<int>> DirectedGraphNoLength(this int[][] edges)
     {
-        Dictionary<int, List<int>> dg = new();
+        IDictionary<int, IList<int>> dg = new Dictionary<int, IList<int>>();
         foreach (var edge in edges)
         {
             int a = edge[0], b = edge[1];
-            if (!dg.ContainsKey(a)) dg[a] = new();
+            if (!dg.ContainsKey(a)) dg[a] = new List<int>();
             dg[a].Add(b);
         }
         return dg;
@@ -363,15 +591,27 @@ static class GraphEX
 
     internal static Dictionary<int, List<(int, int)>> UndirectedGraphWithLength(this int[][] edges)
     {
-        Dictionary<int, List<(int, int)>> dg = new();
+        Dictionary<int, List<(int, int)>> ug = new();
         foreach ((int a, int b, int l) in edges.EnumLengthEdges())
         {
-            if (!dg.ContainsKey(a)) dg[a] = new();
-            dg[a].Add((b, l));
-            if (!dg.ContainsKey(b)) dg[b] = new();
-            dg[b].Add((a, l));
+            if (!ug.ContainsKey(a)) ug[a] = new();
+            ug[a].Add((b, l));
+            if (!ug.ContainsKey(b)) ug[b] = new();
+            ug[b].Add((a, l));
         }
-        return dg;
+        return ug;
+    }
+
+    // n确定时可以直接用数组
+    internal static List<(int, int)>[] UndirectedGraphWithLength(this int[][] edges, int n)
+    {
+        var ug = Enumerable.Range(0, n).Select(_ => new List<(int, int)>()).ToArray();
+        foreach ((int a, int b, int l) in edges.EnumLengthEdges())
+        {
+            ug[a].Add((b, l));
+            ug[b].Add((a, l));
+        }
+        return ug;
     }
 
     /// <summary>
@@ -405,54 +645,6 @@ static class GraphEX
             }
         }
         return ug;
-    }
-
-    /// <summary>
-    /// 无向树形图，节点编号0到n-1，边权数为n-1
-    /// </summary>
-    internal static List<int>[] TreeGraph(this int[][] edges, int n = 0)
-    {
-        if (n == 0) n = edges.Length + 1;
-        var tg = Enumerable.Range(0, n).Select(_ => new List<int>()).ToArray();
-        foreach (var ed in edges)
-        {
-            tg[ed[0]].Add(ed[1]);
-            tg[ed[1]].Add(ed[0]);
-        }
-        return tg;
-    }
-
-    /// <summary>
-    /// 无向树的DFS（非递归模板）
-    /// </summary>
-    internal static void TreeDfs(this IList<int>[] tg)
-    {
-        Stack<(int, int)> dfsStack = new();
-        int nodeIndex = 0, childIndex = 0;
-        while (true)
-        {
-            if (childIndex == 0)
-            {
-                Debug.WriteLine("PreOrder In");
-            }
-
-            // skip parent
-            if (childIndex < tg[nodeIndex].Count && dfsStack.Any() && dfsStack.Peek().Item1 == tg[nodeIndex][childIndex]) ++childIndex;
-
-            // recursion
-            if (childIndex == tg[nodeIndex].Count)
-            {
-                Debug.WriteLine("PostOrder Out");
-
-                if (dfsStack.Any()) (nodeIndex, childIndex) = dfsStack.Pop();
-                else break;
-            }
-            else
-            {
-                dfsStack.Push((nodeIndex, childIndex + 1));
-                (nodeIndex, childIndex) = (tg[nodeIndex][childIndex], 0);
-            }
-        }
     }
 
     internal static long Dijkstra(this int[][] edges, int src, int dest, bool isDirectGraph = true)
@@ -537,7 +729,39 @@ static class GraphEX
         }
         return sg;
     }
-    #endregion 
+
+    /// <summary>
+    /// Hierholzer 算法 - 寻找欧拉路径
+    /// </summary>
+    /// <returns>留意输出的路径为反方向</returns>
+    // 算法描述：https://leetcode.cn/problems/reconstruct-itinerary/solutions/389885/zhong-xin-an-pai-xing-cheng-by-leetcode-solution/
+    // 模板题：P2097合法重新排列数对
+    internal static IEnumerable<int> HierholzerDfs(this IDictionary<int, IList<int>> dg)
+    {
+        // determine start node
+        Counter<int> ind = new();
+        foreach (var ts in dg.Values)
+            foreach (int t in ts)
+                ++ind[t];
+        int start = dg.Keys.FirstOrDefault(s => dg[s].Count == ind[s] + 1);
+        if (start == 0 && !dg.ContainsKey(start))
+            start = dg.Keys.First();
+
+        // dfs using (answer keep in stack)
+        Stack<int> euler = new();
+        euler.Push(start);
+        while (euler.Any())
+        {
+            int s = euler.Peek();
+            if (dg.TryGetValue(s, out var t) && t.Any())
+            {
+                euler.Push(t.Last());
+                t.RemoveAt(t.Count - 1);
+            }
+            else yield return euler.Pop();
+        }
+    }
+    #endregion
 }
 
 /// <summary>
@@ -587,7 +811,7 @@ static class TextEX
     /// <summary>
     /// KMP关键算法-next映射
     /// </summary>
-    public static int[] Kmp(this string s)
+    public static int[] KmpBuildNext(this string s)
     {
         int[] next = new int[s.Length];
         next[0] = -1;
@@ -601,6 +825,94 @@ static class TextEX
         }
 
         return next;
+    }
+
+    /// <summary>
+    /// 字符串匹配 - 在s中找到第一个p就返回
+    /// </summary>
+    public static int SearchKmp(this string s, string p)
+    {
+        int[] next = p.KmpBuildNext();
+        int j = 0;
+        for (int i = 0; i < s.Length; i++)
+        {
+            while (j >= 0 && s[i] != p[j])
+            {
+                if (j == 0)
+                    j = -1;
+                else
+                    j = next[j - 1] + 1;
+            }
+            if (++j == p.Length)
+                return i - j + 1;
+        }
+        return -1;
+    }
+
+    // https://oi-wiki.org/string/z-func/
+    /// <summary>
+    /// Z函数：返回一个数组z，其中z[s]表示s[s:]与s的最大公共前缀的长度
+    /// </summary>
+    // 范例题：P3303第一个几乎相等子字符串的下标
+    internal static int[] ZFunction(this string s)
+    {
+        int n = s.Length;
+        int[] z = new int[n];
+        for (int i = 1, l = 0, r = 0; i < n; ++i)
+        {
+            if (i <= r && z[i - l] < r - i + 1)
+            {
+                z[i] = z[i - l];
+            }
+            else
+            {
+                z[i] = Math.Max(0, r - i + 1);
+                while (i + z[i] < n && s[z[i]] == s[i + z[i]]) ++z[i];
+            }
+            if (i + z[i] - 1 > r)
+            {
+                l = i;
+                r = i + z[i] - 1;
+            }
+        }
+        return z;
+    }
+
+    /// <summary>
+    /// 全域查找，返回数组dp，其中dp[s]为从i开始查找得到与p的最大匹配前缀的长度
+    /// </summary>
+    public static int[] SearchAllKmp(this string s, string p)
+    {
+        int[] dp = new int[s.Length], next = p.KmpBuildNext(), ps = p.ZFunction();
+
+        // 滑动窗口：当前相等的最大子串为s[l..(l+j)]
+        // 当出现要根据next移位时，l 移动到 r， 同时沿路维护dp
+        int l = 0, j = 0;
+        for (int i = 0; i < s.Length; ++i)
+        {
+            while (j >= 0 && (j == p.Length || s[i] != p[j]))
+            {
+                if (j == 0)
+                {
+                    j = -1;
+                }
+                else
+                {
+                    j = next[j - 1] + 1;
+                }
+            }
+            int r = i - j, l0 = l;
+            while (l < r)
+            {
+                if (++l < i)
+                {
+                    dp[l] = Math.Min(i - l, ps[l - l0]); 
+                }
+            }
+            if (j >= 0) dp[l] = j + 1;
+            ++j;
+        }
+        return dp;
     }
 
     /// <summary>
@@ -638,11 +950,16 @@ static class TextEX
 /// </summary>
 public class Counter<T>
 {
-    Dictionary<T, int> dic = new();
+    readonly Dictionary<T, int> dic = new();
+    public int Count => dic.Count;
     public int this[T key]
     {
-        get => dic.ContainsKey(key) ? dic[key] : (dic[key] = 0);
-        set => dic[key] = value;
+        get => dic.TryGetValue(key, out var v) ? v : (dic[key] = 0);
+        set
+        {
+            if (value == 0) dic.Remove(key);
+            else dic[key] = value;
+        }
     }
 }
 
@@ -684,11 +1001,6 @@ static class ReuseFunctions
             ba[i] = tf(i);
         return ba;
     }
-
-    /// <summary>
-    /// 统计二进制中1的个数
-    /// </summary>
-    internal static int CountOne(this int n) => n == 0 ? 0 : n == -2147483648 ? 1 : 1 + CountOne(n & (n - 1));
 
     /// <summary>
     /// 返回第一个大于等于target的位置
@@ -756,32 +1068,6 @@ public class TreeNode
     public override string ToString()
     {
         return $"{val} (L:{left} R:{right})";
-    }
-}
-
-static class TreeEX
-{
-    /// <summary>
-    /// 中序遍历（非递归）
-    /// </summary>
-    public static IEnumerable<TreeNode> MidOrder(TreeNode root)
-    {
-        Stack<TreeNode> stk = new();
-        TreeNode? cur = root;
-        while (cur != null || stk.Any())
-        {
-            if (cur == null)
-            {
-                cur = stk.Pop();
-                yield return cur;
-                cur = cur.right;
-            }
-            else
-            {
-                stk.Push(cur);
-                cur = cur.left;
-            }
-        }
     }
 }
 
@@ -854,8 +1140,8 @@ public class Heap<T>
 /// </summary>
 public class SHeap<K, V>
 {
-    Func<V, V, bool> comp;
-    bool _keepKey = false;
+    readonly Func<V, V, bool> comp;
+    readonly bool _keepKey = false;
     /// <summary>
     /// 在Dijkstra等需要维护一次访问的场景记得设置KeepKey=true
     /// </summary>
@@ -874,8 +1160,8 @@ public class SHeap<K, V>
         set => Add(key, value);
     }
 
-    List<K> _list = new();
-    Dictionary<K, (V val, int ind)> _dic = new();
+    readonly List<K> _list = new();
+    readonly Dictionary<K, (V val, int ind)> _dic = new();
     public bool Any() => _list.Any();
     public int Count => _list.Count;
     public bool ContainsKey(K key) => _dic.ContainsKey(key);
@@ -1245,7 +1531,7 @@ public class TreeList<E> where E : IComparable<E>
         int i = path.Count - 1; 
 
         // u is the last node in the path. u contains element e
-        TNode<E> u = te; // path[i];
+        TNode<E> u = te; // path[s];
 
         // v is the parent of of u, if exists
         TNode<E> v = path[i - 1];
@@ -1321,7 +1607,7 @@ public class TreeList<E> where E : IComparable<E>
                 // Propagate along the path to fix new double red violation
                 u = w;
                 v = parentOfw;
-                FixDoubleRed(u, v, path, i - 2); // i - 2 propagates upward
+                FixDoubleRed(u, v, path, i - 2); // s - 2 propagates upward
             }
         }
     }
@@ -1856,7 +2142,7 @@ class Fenwick
     public int Sum(int i)
     {
         int sum = 0;
-        for (++i; i > 0; sum += arr[i], i &= i - 1); // i -= i & -i);
+        for (++i; i > 0; sum += arr[i], i &= i - 1); // s -= s & -s);
         return sum;
     }
     public int Get(int i)
@@ -1865,6 +2151,112 @@ class Fenwick
         for (int next = i - 1, end = i - (i & -i); next > end; sum -= arr[next], next -= next & -next) ;
         return sum;
     }
+}
+
+// 数值类型为long的树状数组
+class FenwickLong
+{
+    readonly long[] _arr;
+    public int Length => _arr.Length;
+    internal long this[int index]
+    {
+        get => _arr[index - 1];
+        set => _arr[index - 1] = value;
+    }
+    public FenwickLong(int n) => _arr = new long[n];
+    public void Update(int i, long inc = 1L)
+    {
+        for (++i; i <= Length; this[i] += inc, i += i & -i) ;
+    }
+    public long Sum(int i)
+    {
+        long sum = 0;
+        for (++i; i > 0; sum += this[i], i &= i - 1) ; 
+        return sum;
+    }
+    public long Get(int i)
+    {
+        long sum = this[++i];
+        for (int next = i - 1, end = i - (i & -i); next > end; sum -= this[next], next &= next - 1) ;
+        return sum;
+    }
+}
+
+/// <summary>
+/// 树状数组，维护前缀最大值
+/// </summary>
+// 例题：力扣2286. 以组为单位订音乐会的门票
+class MaxFenwick<T> where T : IComparable<T>
+{
+    readonly T[] _arr, a;
+    public MaxFenwick(int n, T initValue)
+    {
+        _arr = new T[n];
+        a = new T[n];
+        Array.Fill(_arr, initValue);
+        Array.Fill(a, initValue);
+    }
+    public int Length => _arr.Length;
+    internal T this[int index]
+    {
+        get => _arr[index - 1];
+        set => _arr[index - 1] = value;
+    }
+
+    /// <summary>
+    /// 更新为一个更大的值
+    /// </summary>
+    public void Up(int i, T val)
+    {
+        if (val.CompareTo(a[i]) > 0)
+            for (a[i++] = val; i <= Length; i += i & -i)
+                if (val.CompareTo(this[i]) > 0)
+                    this[i] = val;
+                else 
+                    break;
+    }
+
+    /// <summary>
+    /// 更新为一个更小的值
+    /// </summary>
+    public void Down(int i, T val)
+    {
+        if (val.CompareTo(a[i]) < 0)
+        {
+            a[i] = val;
+            Adjust(i + 1);
+        }
+    }
+
+    /// <summary>
+    /// 单点更新到较小值时，需要扫描全域看最大值是否有更新
+    /// </summary>
+    void Adjust(int index)
+    {
+        if (index > Length) return;
+        T nextValue = a[index - 1];
+
+        for (int i = index - 1, end = index & index - 1; i > end; i &= i - 1)
+            if (this[i].CompareTo(nextValue) > 0)
+                nextValue = this[i];
+
+        if (nextValue.CompareTo(this[index]) < 0)
+        {
+            this[index] = nextValue;
+            Adjust(index + (index & -index));
+        }
+    }
+
+    public T Max(int i)
+    {
+        T mv = this[i + 1];
+        for (i &= i + 1; i > 0; i &= i - 1)
+            if (this[i].CompareTo(mv) > 0)
+                mv = this[i];
+        return mv;
+    }
+
+    public T Get(int i) => a[i];
 }
 
 /// <summary>
@@ -1882,7 +2274,10 @@ class BitSegmentTree
     public BitSegmentTree(int n)
     {
         N = n;
-        a = new (int, int)[N << 2];
+        int size = 1;
+        while (size < n) size <<= 1;
+        size <<= 1;
+        a = new (int, int)[size];
     }
 
     public int Flip(int l, int r, int i = 0, int start = 0, int end = -1)
@@ -2119,6 +2514,18 @@ static class Common
 
     internal static int RangeCount(this (int l, int r) range) => range.r - range.l + 1;
 
+    #endregion
+
+    #region 字典更新
+    // 通用的快速写法（将TKEY替换成真正的类型），小于则是val < 0
+    //bool Update(Dictionary<TKEY, int> dp, TKEY key_set, int val)
+    //    => (!dp.TryGetValue(key_set, out var v0) || val > v0) && (dp[key_set] = val) >= 0;
+
+    public static bool UpdateBigger<K, V>(this Dictionary<K, V> d, K key, V val) where V: IComparable<V>
+        => (!d.TryGetValue(key, out var v0) || val.CompareTo(v0) > 0) && (d[key] = val).CompareTo(val) == 0;
+
+    public static bool UpdateSmaller<K, V>(this Dictionary<K, V> d, K key, V val) where V : IComparable<V>
+        => (!d.TryGetValue(key, out var v0) || val.CompareTo(v0) < 0) && (d[key] = val).CompareTo(val) == 0;
     #endregion
 
     /// <summary>
@@ -2429,6 +2836,7 @@ public static partial class SolutionExtensions
     }
 
     // a ** b % MOD
+	// 模板题：LC2961
     public static int Pow(this int x, int b)
     {
         if (MOD == 1 || x % MOD == 0 && b != 0) return 0;
@@ -2498,7 +2906,7 @@ static class SortEX
                 if (a[j].CompareTo(a[index]) < 0)
                     index = j;
             if (index != i)
-                (a[i], a[index]) = (a[index], a[i]); //swap(a, i, index);
+                (a[i], a[index]) = (a[index], a[i]); //swap(a, s, index);
         }
     }
 
@@ -2574,14 +2982,14 @@ static class SortEX
                 j--;
             if (i < j)
             {
-                (a[i], a[j]) = (a[j], a[i]); // swap(a, i, j);
+                (a[i], a[j]) = (a[j], a[i]); // swap(a, s, j);
                 i++;
             }
             while (i < j && pivot.CompareTo(a[i]) >= 0)
                 i++;
             if (i < j)
             {
-                (a[i], a[j]) = (a[j], a[i]); // swap(a, i, j);
+                (a[i], a[j]) = (a[j], a[i]); // swap(a, s, j);
                 j--;
             }
         }
@@ -2597,6 +3005,63 @@ static class SortEX
             int q = Partition(a, p, r); // 划分，并返回轴值在数组中的位置
             QuickSort(a, p, q - 1);     // 递归求解左子数组
             QuickSort(a, q + 1, r);     // 递归求解右子数组
+        }
+    }
+
+    // 拓扑排序
+    internal static List<T> TopoSort<T>(this IList<IList<T>> ord)
+    {
+        Dictionary<T, List<T>> g = new();
+        HashSet<T> s = new();
+        Dictionary<T, int> cn = new();
+        foreach (var p in ord)
+        {
+            var x = p[0];
+            var y = p[1];
+            if (!g.TryGetValue(x, out var li))
+                g[x] = li = new();
+            li.Add(y);
+            if (cn.TryGetValue(y, out int c))
+            {
+                cn[y] = ++c;
+            }
+            else
+            {
+                cn[y] = c = 1;
+            }
+            if (c == 1) s.Remove(y);
+            if (!cn.TryGetValue(x, out int xc) || xc == 0) s.Add(x);
+        }
+        List<T> a = new();
+        while (s.Any())
+        {
+            var x = s.First();
+            s.Remove(x);
+            a.Add(x);
+            if (g.TryGetValue(x, out var nt))
+                foreach (var y in nt)
+                    if (--cn[y] == 0)
+                    {
+                        s.Add(y);
+                        cn.Remove(y);
+                    }
+        }
+        if (cn.Any(kv => kv.Value > 0)) a.Clear();
+        return a;
+    }
+
+    internal static List<int> TopoSort(this int[][] ord, int startInd, int nCount)
+    {
+        var a = ord.TopoSort();
+        if (!a.Any() || a.Count == nCount) return a;
+        else
+        {
+            HashSet<int> hs = new();
+            for (int i = startInd; i < startInd + nCount; ++i)
+                hs.Add(i);
+            foreach (int j in a) hs.Remove(j);
+            a.AddRange(hs);
+            return a;
         }
     }
 }
