@@ -5,9 +5,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace ConsoleCore1;
+
+using GNT = long; // 需要计算的数值类型，在一些需要计算的类中使用GNT，方便修改
 
 /// <summary>
 /// 数论库
@@ -881,6 +886,7 @@ static class TextEX
     /// <summary>
     /// 全域查找，返回数组dp，其中dp[s]为从i开始查找得到与p的最大匹配前缀的长度
     /// </summary>
+    // 例题：P3303第一个几乎相等子字符串的下标
     public static int[] SearchAllKmp(this string s, string p)
     {
         int[] dp = new int[s.Length], next = p.KmpBuildNext(), ps = p.ZFunction();
@@ -2257,6 +2263,64 @@ class MaxFenwick<T> where T : IComparable<T>
     }
 
     public T Get(int i) => a[i];
+}
+
+/// <summary>
+/// 扫描线线段树
+/// </summary>
+// 需要使用懒修改技术，减少下推次数（尤其是3454，不这样做会超时）
+// 例题：力扣850. 矩形面积 II, 力扣3454. 分割正方形 II
+class ScanSegmentTree
+{
+    readonly int[] tma, la; // 最小覆盖次数，懒标记
+    readonly GNT[] tla; // 最小覆盖长度
+    private readonly List<GNT> idx; // 离散化后的坐标
+    readonly IDictionary<GNT, int> mp; // 离散化映射
+    public ScanSegmentTree(IEnumerable<GNT> nums)
+    {
+        idx = nums.OrderBy(t => t).Distinct().ToList();
+        int n = idx.Count;
+        mp = Enumerable.Range(0, n).ToDictionary(i => idx[i]);
+        int size = 1;
+        while (size < n) size <<= 1;
+        size <<= 1;
+        tma = new int[size];
+        tla = new GNT[size];
+        la = new int[size];
+    }
+    public GNT Length => tla[0];
+    public void Add(GNT xl, GNT xr, int val) => Update(0, 0, idx.Count - 1, val, mp[xl] + 1, mp[xr]);
+    void Update(int i, int start, int end, int val, int left, int right)
+    {
+        if (left <= start && end <= right && (val > 0 || tma[i] > 0 || tma[i] < -2))
+        {
+            la[i] += val;
+            tma[i] = tma[i] >= 0 ? tma[i] + val : tma[i] - val;
+            tla[i] = tma[i] == 0 ? 0 : idx[end] - idx[start - 1];
+        }
+        else
+        {
+            int mid = start + end >> 1, li = i << 1 | 1, ri = i + 1 << 1;
+            // lazy tag push down
+            if (la[i] != 0) {
+                int lazy = la[i];
+                la[i] = 0;
+                Update(li, start, mid, lazy, start, mid);
+                Update(ri, mid + 1, end, lazy, mid + 1, end);
+            }
+
+            // calc
+            if (left <= mid)
+                Update(li, start, mid, val, left, right);
+            if (right > mid)
+                Update(ri, mid + 1, end, val, left, right);
+            if (tma[li] >= 0 && tma[ri] >= 0 && tma[li] == tma[ri])
+                tma[i] = tma[li];
+            else
+                tma[i] = ~Math.Min(tma[li] >= 0 ? tma[li] : ~tma[li], tma[ri] >= 0 ? tma[ri] : ~tma[ri]);
+            tla[i] = tla[li] + tla[ri];
+        }
+    }
 }
 
 /// <summary>
