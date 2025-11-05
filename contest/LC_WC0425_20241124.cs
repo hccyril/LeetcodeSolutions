@@ -137,6 +137,8 @@ internal class LC_WC0425_20241124
         }
         return dp[0, 0];
     }
+    static readonly string RefMethod = nameof(GraphEX.TreeDfs2);
+
     #endregion
 
     #region Problem E

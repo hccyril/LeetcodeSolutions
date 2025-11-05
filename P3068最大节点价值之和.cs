@@ -12,6 +12,8 @@ namespace ConsoleCore1;
 // Tree DP
 internal class P3068最大节点价值之和
 {
+    static readonly string RefMethod = nameof(GraphEX.TreeDfs2);
+
     // 基于上一个版本进行修正
     // dp[i].t0: 当前子树最优解 dp[i].t1: 当前子树+当前根节点再翻转一次 的最优解
     public long MaximumValueSum(int[] nums, int k, int[][] edges)

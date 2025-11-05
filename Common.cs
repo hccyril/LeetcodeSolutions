@@ -5,9 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace ConsoleCore1;
@@ -202,6 +199,10 @@ static class MathEX
     }
 
     #endregion 排列组合
+	
+	#region 计算几何Geometry
+	// TODO
+	#endregion // 计算几何Geometry
 }
 
 /// <summary>
@@ -209,10 +210,13 @@ static class MathEX
 /// </summary>
 static class BitOperationsEX
 {
+    // 返回2进制的位数, same as int.Log2()
+    internal static int BitLength(this int n) => n <= 1 ? 1 : 1 + BitLength(n >> 1);
+
     /// <summary>
-    /// 统计二进制中1的个数
+    /// 统计二进制中1的个数, 也可以用int.PopCount()
     /// </summary>
-    internal static int CountOne(this int n) => n == 0 ? 0 : n == -2147483648 ? 1 : 1 + CountOne(n & (n - 1));
+    internal static int BitCount(this int n) => n == 0 ? 0 : n == -2147483648 ? 1 : 1 + BitCount(n & (n - 1));
 
     /// <summary>
     /// 统计0到n中对应i位出现1的个数
@@ -413,7 +417,7 @@ static class GraphEX
     /// </summary>
     /// <param name="n">如果节点编号从1开始请传入n+1</param>
     /// <returns></returns>
-    internal static List<int>[] TreeGraph(this int[][] edges, int n = 0)
+    internal static IList<int>[] TreeGraph(this int[][] edges, int n = 0)
     {
         if (n == 0) n = edges.Length + 1;
         var tg = Enumerable.Range(0, n).Select(_ => new List<int>()).ToArray();
@@ -426,7 +430,7 @@ static class GraphEX
     }
 
     // 有边权的无向树
-    internal static List<(int, int)>[] WeightedTreeGraph(this int[][] edges, int n = 0)
+    internal static IList<(int, int)>[] WeightedTreeGraph(this int[][] edges, int n = 0)
     {
         if (n == 0) n = edges.Length + 1;
         var tg = Enumerable.Range(0, n).Select(_ => new List<(int, int)>()).ToArray();
@@ -511,8 +515,33 @@ static class GraphEX
         }
     }
 
+    /// <summary>
+    /// 非递归DFS快速写法，只能做前序遍历，儿子节点的访问顺序为逆序
+    /// </summary>
+    internal static void TreeDfs3(this IList<int>[] tg, int n = 0)
+    {
+        const int DFS_ROOT = 0;
+        if (n <= 0) n = tg.Length;
+        Span<bool> vis = stackalloc bool[n];
+        vis[DFS_ROOT] = true;
+        Stack<int> stk = new();
+        stk.Push(DFS_ROOT);
+        while (stk.Any())
+        {
+            int i = stk.Pop();
+            // process node i
+            // ...
+            foreach (var j in tg[i])
+                if (!vis[j])
+                {
+                    vis[j] = true;
+                    stk.Push(j);
+                }
+        }
+    }
+
     // DEF: The diameter of a tree is the length of the longest path between any two nodes in the tree.
-    internal static int TreeDiameter(this List<int>[] tg)
+    internal static int TreeDiameter(this IList<int>[] tg)
     {
         int n = tg.Length, dm = 1, dmi = 0;
         Span<int> a = stackalloc int[n];
@@ -540,6 +569,29 @@ static class GraphEX
         }
         return dm - 1;
     }
+
+    /// <summary>
+    /// 树节点黑白染色
+    /// </summary>
+    internal static BitArray TreeBW(this IList<int>[] tg)
+    {
+        int n = tg.Length;
+        BitArray ba = new(n);
+        Queue<(int, int)> qu = new();
+        qu.Enqueue((0, -1));
+        while (qu.Any())
+        {
+            (int i, int p) = qu.Dequeue();
+            foreach (int j in tg[i])
+                if (j != p)
+                {
+                    ba[j] = !ba[i];
+                    qu.Enqueue((j, i));
+                }
+        }
+        return ba;
+    }
+
     #endregion
 
     #region 图论-最短路径
@@ -774,37 +826,55 @@ static class GraphEX
 /// </summary>
 /// <typeparam name="K">支持节点类型为泛型</typeparam>
 /// <typeparam name="V">支持边权值类型为泛型</typeparam>
+// 例题1：P1334阈值距离内邻居最少的城市
+// 例题2：3387. 两天自由外汇交易后的最大货币数, 周赛428-B LC_WC0428_20241215.MaxAmount()
 public class StarGraph<K, V> 
     where K: notnull
     where V: IComparable
 {
-    readonly Dictionary<K, LinkEdge?> head = new();
+    readonly Dictionary<K, LinkEdge> head = new();
     class LinkEdge
     {
         public readonly K To;
         public readonly V W;
-        public readonly LinkEdge? Next;
-        public LinkEdge(K t, V w, LinkEdge? n)
+        public readonly LinkEdge Next;
+        public LinkEdge(K t, V w, LinkEdge n)
         {
             To = t;
             W = w;
             Next = n;
         }
+        internal LinkEdge(K t, V w)
+        {
+            To = t;
+            W = w;
+            Next = this;
+        }
     }
 
     public void AddEdge(K u, K v, V w)
     {
-        head.TryAdd(u, null);
+        if (!head.TryAdd(u, new(v, w)))
         head[u] = new(v, w, head[u]);
 }
 
     public IEnumerable<K> Nexts(K u)
-        => Edges(u).Select(t => t.Item1);
+        => this[u].Select(t => t.Item1);
 
-    public IEnumerable<(K, V)> Edges(K u)
+    public IEnumerable<(K, V)> this[K u]
     {
-        for (var ed = head.ContainsKey(u) ? head[u] : null; ed != null; ed = ed.Next)
-            yield return (ed.To, ed.W);
+        get
+        {
+            if (head.TryGetValue(u, out var e))
+            {
+                while (e.Next != e)
+                {
+                    yield return (e.To, e.W);
+                    e = e.Next;
+                }
+                yield return (e.To, e.W);
+            }
+        }
     }
 }
 
@@ -873,6 +943,31 @@ static class TextEX
             {
                 z[i] = Math.Max(0, r - i + 1);
                 while (i + z[i] < n && s[z[i]] == s[i + z[i]]) ++z[i];
+            }
+            if (i + z[i] - 1 > r)
+            {
+                l = i;
+                r = i + z[i] - 1;
+            }
+        }
+        return z;
+    }
+    // Z函数扩展：不一定是字符串
+    // 例题：3388. 统计数组中的美丽分割
+    internal static int[] ZFun<T>(this IList<T> s)
+    {
+        int n = s.Count;
+        int[] z = new int[n];
+        for (int i = 1, l = 0, r = 0; i < n; ++i)
+        {
+            if (i <= r && z[i - l] < r - i + 1)
+            {
+                z[i] = z[i - l];
+            }
+            else
+            {
+                z[i] = Math.Max(0, r - i + 1);
+                while (i + z[i] < n && s[z[i]].Equals(s[i + z[i]])) ++z[i];
             }
             if (i + z[i] - 1 > r)
             {
@@ -952,6 +1047,107 @@ static class TextEX
 }
 
 /// <summary>
+/// AC自动机
+/// </summary>
+// 例题：P3213最小代价构造字符串
+public class AcAuto
+{
+    class TrieNode
+    {
+        TrieNode[] children = Array.Empty<TrieNode>();
+        public bool IsEnd => Words.Any();
+        public TrieNode Fail { get; set; }
+        public List<string> Words { get; } = new();
+
+        public bool HasChild(int index) => children.Any() && children[index] != null;
+        public TrieNode GetChild(int index)
+        {
+            if (this[index] == null) this[index] = new();
+            return this[index];
+        }
+        public TrieNode this[int index]
+        {
+            get
+            {
+                if (children.Length == 0)
+                {
+                    children = new TrieNode[26];
+                }
+                return children[index];
+            }
+            set
+            {
+                if (children.Length == 0)
+                {
+                    children = new TrieNode[26];
+                }
+                children[index] = value;
+            }
+        }
+    }
+
+    TrieNode root;
+    TrieNode temp;
+
+    // Build
+    public AcAuto(IEnumerable<string> words)
+    {
+        root = new();
+        foreach (string word in words)
+        {
+            TrieNode cur = root;
+            foreach (char ch in word)
+            {
+                cur = cur.GetChild(ch - 'a');
+            }
+            cur.Words.Add(word);
+        }
+        root.Fail = root;
+        Queue<TrieNode> q = new();
+        for (int i = 0; i < 26; i++)
+        {
+            if (root.HasChild(i))
+            {
+                root[i].Fail = root;
+                q.Enqueue(root[i]);
+            }
+            else
+            {
+                root[i] = root;
+            }
+        }
+        while (q.Count > 0)
+        {
+            TrieNode node = q.Dequeue();
+            if (node.Fail != node && node.Fail.IsEnd)
+            {
+                node.Words.AddRange(node.Fail.Words);
+            }
+            for (int i = 0; i < 26; i++)
+            {
+                if (node.HasChild(i))
+                {
+                    node[i].Fail = node.Fail[i];
+                    q.Enqueue(node[i]);
+                }
+                else
+                {
+                    node[i] = node.Fail[i];
+                }
+            }
+        }
+
+        temp = root;
+    }
+
+    public IList<string> Query(char letter)
+    {
+        temp = temp[letter - 'a'];
+        return temp.Words;
+    }
+}
+
+/// <summary>
 /// 仿Python的Counter
 /// </summary>
 public class Counter<T>
@@ -961,12 +1157,9 @@ public class Counter<T>
     public int this[T key]
     {
         get => dic.TryGetValue(key, out var v) ? v : (dic[key] = 0);
-        set
-        {
-            if (value == 0) dic.Remove(key);
-            else dic[key] = value;
-        }
+        set => dic[key] = value;
     }
+    public IEnumerable<KeyValuePair<T, int>> Items => dic;
 }
 
 static class ReuseFunctions
@@ -1074,6 +1267,25 @@ public class TreeNode
     public override string ToString()
     {
         return $"{val} (L:{left} R:{right})";
+    }
+    // 根据完全二叉树数组创建树
+    public static TreeNode FromInput(string s)
+    {
+        var sa = s.TrimStart('[').TrimEnd(']').Split(',');
+        if (sa?.Any() != true || sa[0] == "null") return null;
+        var root = new TreeNode(int.Parse(sa[0]));
+        Stack<(int, TreeNode)> stk = new();
+        stk.Push((0, root));
+        while (stk.Any())
+        {
+            (int i, TreeNode tn) = stk.Pop();
+            int l = i << 1 | 1, r = i + 1 << 1;
+            if (l < sa.Length && sa[l] != "null")
+                stk.Push((l, tn.left = new(int.Parse(sa[l]))));
+            if (r < sa.Length && sa[r] != "null")
+                stk.Push((r, tn.right = new(int.Parse(sa[r]))));
+        }
+        return root;
     }
 }
 
@@ -1401,14 +1613,25 @@ public class HashHeap
 /// </summary>
 class UnionFind
 {
-    int[] parent;
+    readonly int[] parent;
     public UnionFind(int n) => parent = Enumerable.Range(0, n).ToArray();
     public bool Check(int index1, int index2) => Find(index1) == Find(index2);
     public void Union(int index1, int index2) => parent[Find(index2)] = Find(index1);
     public int this[int index] => Find(index);
-    public int Find(int index) => parent[index] != index ? (parent[index] = Find(parent[index])) : parent[index];
-    public int GroupCount() => Enumerable.Range(0, parent.Length).Select(i => Find(i)).Distinct().Count();
+    public int Find(int index)
+    {
+        if (parent[index] == index) return index;
+        int ans = index;
+        while (parent[ans] != ans) ans = parent[ans];
+        while (parent[index] != ans) (parent[index], index) = (ans, parent[index]);
+        return ans;
 }
+    public int GroupCount() => Enumerable.Range(0, parent.Length).Count(i => i == parent[i]);
+}
+
+// 原先Find方法的实现，新的修改避免了使用递归
+//public int Find(int index) => parent[index] != index ? (parent[index] = Find(parent[index])) : parent[index];
+
 
 	/* 并查集 - 连通图专用（节点编号1-n，实时维护GroupCount）- P1579
 	class UnionFind
@@ -2151,6 +2374,8 @@ class Fenwick
         for (++i; i > 0; sum += arr[i], i &= i - 1); // s -= s & -s);
         return sum;
     }
+    public int RangeSum(int l, int r) 
+        => l == 0 ? Sum(r) : Sum(r) - Sum(l - 1);
     public int Get(int i)
     {
         int sum = arr[++i];
@@ -2529,12 +2754,12 @@ static class Common
     /// <summary>
     /// 查找排列序列中数值范围在[lo,hi]的区间
     /// </summary>
-    internal static (int l, int r) BinaryRangeSearch<T>(this IList<T> list, T lo, T hi) where T: IComparable<T>
+    internal static (int l, int r) BinaryRangeSearch<T>(this IList<T> list, T lo, T hi, int li = 0, int ri = -1) where T: IComparable<T>
     {
         if (lo.CompareTo(hi) > 0 || list?.Any() != true || hi.CompareTo(list.First()) < 0 || lo.CompareTo(list.Last()) > 0)
             return (0, -1);
             
-        int l1 = 0, r1 = list.Count - 1, l2 = 0, r2 = list.Count - 1;
+        int l1 = li, r1 = ri >= 0 ? ri : list.Count - 1, l2 = 0, r2 = list.Count - 1;
         // lower bound, meanwhile restrict upper bound
         while (l1 < r1)
         {
@@ -2576,7 +2801,7 @@ static class Common
 
     }
 
-    internal static int RangeCount(this (int l, int r) range) => range.r - range.l + 1;
+    internal static int RangeCount(this (int l, int r) range) => range.r < range.l ? 0 : range.r - range.l + 1;
 
     #endregion
 
@@ -2665,6 +2890,29 @@ static class Common
                 long nxs = sm + a[0];
                 pq.Enqueue((nxs, 0, i - 1), nxs);
             }
+        }
+    }
+
+	// 仿Python的groupby，统计枚举相邻相等的元素个数
+	public static IEnumerable<(T, int)> EnumGroups<T>(this IEnumerable<T> a) where T: IComparable<T>
+    {
+        if (a.Any()) 
+        {
+            T x = a.First();
+            int c = 0;
+            foreach (T y in a)
+            {
+                if (y.CompareTo(x) == 0) 
+                {
+                    ++c;
+                }
+                else
+                {
+                    yield return (x, c);
+                    (x, c) = (y, 1);
+                }
+            }
+            yield return (x, c);
         }
     }
 
@@ -2759,13 +3007,17 @@ public class Interval : IComparable<Interval>
 {
     public int val = 1; // new added
     public int start, end;
+    public bool check = true; // 2024/12/8 (WC427)
     public Interval() { }
     public Interval(int val) => start = end = val;
+    public Interval(int l, int r, bool c = false) => (start, end, check) = (l, r, c);
     public int Count => end - start + 1;
     public bool Valid => end >= start && val > 0;
+
+    // check==false时允许两个区间边界触碰
     public int CompareTo(Interval other)
-        => Math.Max(start, other.start) <= Math.Min(end, other.end) ? 0 :
-           start < other.start ? -1 : 1;
+        => check ? (Math.Max(start, other.start) <= Math.Min(end, other.end) ? 0 : start < other.start ? -1 : 1)
+        : (Math.Max(start, other.start) < Math.Min(end, other.end) ? 0 : start < other.start ? -1 : 1); 
 
     public Interval Merge(Interval other)
         => new() { start = Math.Min(start, other.start), end = Math.Max(end, other.end), val = val };

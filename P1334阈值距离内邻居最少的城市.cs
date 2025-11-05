@@ -34,7 +34,7 @@ namespace ConsoleCore1
                     }
 
                     (int u, int p) = hp.Pop(); ++nc;
-                    foreach ((int v, int w) in sg.Edges(u))
+                    foreach ((int v, int w) in sg[u])
                         if (p + w <= distanceThreshold)
                             hp.Add(v, p + w);
                 }
