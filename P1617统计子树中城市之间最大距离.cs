@@ -1,4 +1,7 @@
 ﻿using ConsoleCore1;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 // hard, practice 2023/7/10
 // 超时：用时1小时20分37秒

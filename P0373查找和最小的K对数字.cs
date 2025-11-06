@@ -1,8 +1,8 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+
 // medium, 经典题，2023/7/10重做
 // 优先队列（堆）
-using System.Reflection.Metadata;
-
 internal class P0373查找和最小的K对数字
 {
     // 规则：

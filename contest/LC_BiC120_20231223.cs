@@ -1,4 +1,8 @@
-﻿namespace ConsoleCore1.contest;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace ConsoleCore1.contest;
 
 //# 第120场双周赛，2023/12/23
 //# AK but WA 1 time for D

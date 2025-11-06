@@ -1,4 +1,8 @@
-﻿// hard, 2023/7/10 practice
+﻿using System;
+using System.Linq;
+namespace ConsoleCore1;
+
+// hard, 2023/7/10 practice
 // 挑战成功，用时38分42秒
 // 转换成0-1背包问题，背包从小到大去装，能装完则返回True
 internal class P1655分配重复整数

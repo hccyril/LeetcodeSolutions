@@ -1,4 +1,7 @@
-﻿namespace ConsoleCore1.contest;
+﻿using System;
+using System.Collections.Generic;
+
+namespace ConsoleCore1.contest;
 
 // 完成情况较好，全部一次提交通过
 // 143 / 3873	呱呱编程实验室 	17	0:45:00	0:02:15	0:18:45	0:29:03	0:45:00

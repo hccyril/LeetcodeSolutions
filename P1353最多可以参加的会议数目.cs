@@ -10,8 +10,8 @@ namespace ConsoleCore1
     // 2021/11/21
     class P1353最多可以参加的会议数目
     {
-        string 相关题1 = nameof(P1235规划兼职工作);
-        string 相关题2 = nameof(P1751最多可以参加的会议数目II);
+        public static readonly string 相关题1 = nameof(P1235规划兼职工作);
+        public static readonly string 相关题2 = nameof(P1751最多可以参加的会议数目II);
 
         // ver3: 在ver2的基础上改进优化 -> AC(50%)
         // 因为最终超时的case是[[1,1],[1,2],[1,3],...[1,100000]]

@@ -1249,6 +1249,8 @@ public class ListNode
     }
 }
 
+#nullable enable
+#pragma warning disable IDE1006
 public class TreeNode
 {
     public virtual int val { get; set; }
@@ -1269,7 +1271,7 @@ public class TreeNode
         return $"{val} (L:{left} R:{right})";
     }
     // 根据完全二叉树数组创建树
-    public static TreeNode FromInput(string s)
+    public static TreeNode? FromInput(string s)
     {
         var sa = s.TrimStart('[').TrimEnd(']').Split(',');
         if (sa?.Any() != true || sa[0] == "null") return null;
@@ -1288,6 +1290,8 @@ public class TreeNode
         return root;
     }
 }
+#nullable disable
+#pragma warning restore IDE1006
 
 /// <summary>
 /// heap
