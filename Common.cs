@@ -1150,7 +1150,7 @@ public class AcAuto
 /// <summary>
 /// 仿Python的Counter
 /// </summary>
-public class Counter<T>
+public class Counter<T> : IEnumerable<KeyValuePair<T, int>> where T: notnull
 {
     readonly Dictionary<T, int> dic = new();
     public int Count => dic.Count;
@@ -1158,8 +1158,19 @@ public class Counter<T>
     {
         get => dic.TryGetValue(key, out var v) ? v : (dic[key] = 0);
         set => dic[key] = value;
+        // use following setter if you need to remove zero count items
+        //set
+        //{
+        //    if (value == 0) dic.Remove(key);
+        //    else dic[key] = value;
+        //}
     }
-    public IEnumerable<KeyValuePair<T, int>> Items => dic;
+
+    public IEnumerator<KeyValuePair<T, int>> GetEnumerator()
+        => dic.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+        => GetEnumerator();
 }
 
 static class ReuseFunctions
