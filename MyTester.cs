@@ -19,6 +19,17 @@ namespace ConsoleCore1
             //ss.GetViewBetween()
             
         }
+
+        internal static void LinkedListTest()
+        {
+            LinkedList<int> li = new();
+            LinkedListNode<int> node1 = li.AddLast(1), node2 = li.AddLast(2), node3 = li.AddLast(3);
+            li.AddBefore(node1, node3);
+            for (var node = node1; node != null; node = node.Next)
+                Console.WriteLine("node=" + node.ValueRef);
+
+        }
+            
         int MyCompare(int a, int b)
         {
             //var p = new ConsoleCore1.CompleteTreeNode

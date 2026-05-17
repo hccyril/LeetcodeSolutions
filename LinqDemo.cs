@@ -68,5 +68,19 @@ internal class LinqDemo
     => Enumerable.Range(0, words.Length)
         .Where(i => words[i].Contains(x))
         .ToArray();
+
+    public int[] P3809_BestTower(int[][] towers, int[] center, int radius) 
+        => towers
+            .Where(t => Math.Abs(t[0] - center[0]) + Math.Abs(t[1] - center[1]) <= radius)
+            .OrderBy(t => (-t[2], t[0], t[1]))
+            .Select(t => t[..2])
+            .FirstOrDefault() ?? [-1, -1];
+
+    public int P3810_MinOperations(int[] nums, int[] target) 
+        => Enumerable.Range(0, nums.Length)
+            .Where(i => nums[i] != target[i])
+            .Select(i => nums[i])
+            .Distinct()
+            .Count();
 }
 

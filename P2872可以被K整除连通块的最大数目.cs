@@ -55,5 +55,5 @@ internal class P2872可以被K整除连通块的最大数目
         return ans;
     }
 
-    public static readonly string RefMethod = nameof(GraphEX.TreeDfs2);
+    static readonly string RefMethod = nameof(GraphEX.TreeDfs2);
 }

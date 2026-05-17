@@ -211,7 +211,9 @@ static class MathEX
 static class BitOperationsEX
 {
     // 返回2进制的位数, same as int.Log2()
-    internal static int BitLength(this int n) => n <= 1 ? 1 : 1 + BitLength(n >> 1);
+    // 更新：0.BitLength应该等于0，跟Python一致
+    internal static int BitLength(this int n) => 32 - int.LeadingZeroCount(n); // n == 0 ? 0 : 1 + BitLength(n >> 1);
+    internal static int BitLength(this long n) => 64 - (int)long.LeadingZeroCount(n);
 
     /// <summary>
     /// 统计二进制中1的个数, 也可以用int.PopCount()
@@ -1171,6 +1173,35 @@ public class Counter<T> : IEnumerable<KeyValuePair<T, int>> where T: notnull
 
     IEnumerator IEnumerable.GetEnumerator()
         => GetEnumerator();
+}
+
+/// <summary>
+/// ST表, l and r inclusive
+/// </summary>
+public class SparseTable<T>
+{
+    readonly Func<T, T, T> _sel;
+    readonly T[,] _st;
+    public SparseTable(IEnumerable<T> a, Func<T, T, T> sel)
+    {
+        _sel = sel;
+        int n = a.Count(), l1 = n.BitLength() + 1;
+        _st = new T[n, l1];
+        int i = 0;
+        foreach (T x in a)
+            _st[i++, 0] = x;
+        for (int j = 1; j < l1; ++j)
+        {
+            int pj = 1 << j - 1;
+            for (i = 0; i < n - pj; ++i)
+                _st[i, j] = _sel(_st[i, j - 1], _st[i + pj, j - 1]);
+        }
+    }
+    public T Query(int l, int r)
+    {
+        int lt = r - l + 1, q = lt.BitLength() - 1;
+        return _sel(_st[l, q], _st[r - (1 << q) + 1, q]);
+    }
 }
 
 static class ReuseFunctions
