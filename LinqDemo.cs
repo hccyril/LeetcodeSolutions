@@ -63,7 +63,12 @@ internal class LinqDemo
     }
 
     // ------------- Mine --------------------
-
+    public int P961_RepeatedNTimes(int[] nums)
+        => nums
+            .GroupBy(t => t)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .First();
     public IList<int> P2942_FindWordsContaining(string[] words, char x)
     => Enumerable.Range(0, words.Length)
         .Where(i => words[i].Contains(x))

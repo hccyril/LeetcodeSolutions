@@ -1671,7 +1671,7 @@ class UnionFind
         while (parent[ans] != ans) ans = parent[ans];
         while (parent[index] != ans) (parent[index], index) = (ans, parent[index]);
         return ans;
-}
+    }
     public int GroupCount() => Enumerable.Range(0, parent.Length).Count(i => i == parent[i]);
 }
 
